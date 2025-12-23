@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NexusAI Pro - Advanced AI Assistant</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0099FF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NexusAI">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #0f172a;
+        }
+        
+        body.dark-mode {
+            background-color: #0a0e27;
+            color: #fafafa;
+        }
+        
+        /* Onboarding Screen */
+        #onboardingScreen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        #setupScreen {
+            display: none;
+            overflow-y: auto;
+        }
+        
+        #appScreen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .onboarding-container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .logo-svg {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+        }
+        
+        h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #0099FF 0%, #00DD88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 16px 0;
+        }
+        
+        p {
+            color: #64748B;
+            line-height: 1.6;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0099FF 0%, #0077CC 100%);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-size: 16px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 153, 255, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #0099FF;
+            padding: 14px 24px;
+            border: 1px solid #E0E7FF;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(0, 153, 255, 0.1);
+        }
+        
+        .btn-social {
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-social:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #E0E7FF;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-mode .input-field {
+            border-color: #27272A;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #0099FF;
+            box-shadow: 0 0 0 3px rgba(0, 153, 255, 0.1);
+        }
+        
+        /* Setup Steps */
+        .setup-steps {
+            background: #F8FAFC;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        
+        .setup-step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #0099FF;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        
+        .step-number.completed {
+            background: #00DD88;
+        }
+        
+        .step-number.pending {
+            background: #E0E7FF;
+            color: #0099FF;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        body.dark-mode .modal-content {
+            background: #1a1a2e;
+        }
+        
+        /* Header */
+        header {
+            border-bottom: 1px solid #E2E8F0;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button {
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .icon-btn {
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+        
+        body.dark-mode .icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Main Content */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #messagesContainer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 16px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            padding: 32px 16px;
+        }
+        
+        .message-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.5;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message-user {
+            background: linear-gradient(135deg, #0099FF 0%, #0077CC 100%);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .message-assistant {
+            background: rgba(0, 0, 0, 0.05);
+            color: inherit;
+        }
+        
+        body.dark-mode .message-assistant {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Footer */
+        .input-area {
+            border-top: 1px solid #E2E8F0;
+            padding: 16px;
+        }
+        
+        #messageForm {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        /* Badge */
+        .badge-pro {
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        /* Feature Card */
+        .feature-card {
+            border: 1px solid #E0E7FF;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .feature-card:hover {
+            border-color: #0099FF;
+            box-shadow: 0 8px 16px rgba(0, 153, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #E0E7FF;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0099FF 0%, #00DD88 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .gap-12 { gap: 12px; }
+        .gap-16 { gap: 16px; }
+        .gap-24 { gap: 24px; }
+        .mb-8 { margin-bottom: 8px; }
+        .mb-16 { margin-bottom: 16px; }
+        .mb-24 { margin-bottom: 24px; }
+        .mb-32 { margin-bottom: 32px; }
+        .mt-8 { margin-top: 8px; }
+        .mt-12 { margin-top: 12px; }
+        .p-16 { padding: 16px; }
+        .p-20 { padding: 20px; }
+        .p-24 { padding: 24px; }
+        .rounded-12 { border-radius: 12px; }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 13px; }
+        .text-14 { font-size: 14px; }
+        .font-600 { font-weight: 600; }
+        .font-700 { font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<!-- ONBOARDING SCREEN -->
+<div id="onboardingScreen" class="onboarding-container">
+    <div class="mb-32">
+        <svg class="logo-svg" viewBox="0 0 80 80" fill="none">
+            <defs>
+                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#0099FF;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#00DD88;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <rect x="10" y="10" width="60" height="60" rx="16" fill="url(#grad1)"/>
+            <circle cx="40" cy="35" r="12" fill="white"/>
+            <path d="M 40 50 Q 30 55 25 60" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M 40 50 Q 50 55 55 60" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+        <h1>NexusAI Pro</h1>
+        <p>Advanced AI Assistant</p>
+    </div>
+    
+    <div class="mb-32">
+        <h2>Welcome to NexusAI</h2>
+        <p>Your personal AI assistant powered by cutting-edge technology. Let's get you started!</p>
+    </div>
+    
+    <div class="setup-steps mb-32">
+        <div class="setup-step">
+            <div class="step-number">1</div>
+            <div style="text-align: left;">
+                <p class="font-600 mb-8">Create Your Account</p>
+                <p class="text-sm">Set up with your name and email</p>
+            </div>
+        </div>
+        <div class="setup-step">
+            <div class="step-number">2</div>
+            <div style="text-align: left;">
+                <p class="font-600 mb-8">Add Your API Key</p>
+                <p class="text-sm">Get free from console.groq.com</p>
+            </div>
+        </div>
+        <div class="setup-step">
+            <div class="step-number pending">3</div>
+            <div style="text-align: left;">
+                <p class="font-600 mb-8">Start Chatting</p>
+                <p class="text-sm">Talk to AI and get instant answers</p>
+            </div>
+        </div>
+    </div>
+    
+    <button id="startOnboardingBtn" class="btn-primary mb-16">Get Started</button>
+    <button id="skipOnboardingBtn" class="btn-secondary">Skip for Now</button>
+</div>
+
+<!-- SETUP SCREEN -->
+<div id="setupScreen">
+    <div style="max-width: 500px; margin: 0 auto; padding: 40px 20px;">
+        <div class="mb-32">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <span id="setupStep" class="text-14 font-600" style="color: #0099FF;">Step 1 of 3</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="setupProgress" style="width: 33.33%;"></div>
+            </div>
+        </div>
+        
+        <!-- Step 1 -->
+        <div id="setupStep1" style="animation: slideIn 0.3s ease;">
+            <h2>Create Your Account</h2>
+            <p class="mb-24">We'll set up your profile in just a few steps</p>
+            
+            <!-- Social Login Options -->
+            <div class="flex flex-col gap-12 mb-24">
+                <button type="button" onclick="nexusai.socialLogin('google')" class="btn-social" style="background: white; border: 1px solid #E0E7FF; color: #0f172a; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px;">
+                    <span style="font-size: 18px;">🔵</span> Continue with Google
+                </button>
+                <button type="button" onclick="nexusai.socialLogin('facebook')" class="btn-social" style="background: #1877F2; color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px;">
+                    <span style="font-size: 18px;">👤</span> Continue with Facebook
+                </button>
+                <button type="button" onclick="nexusai.socialLogin('github')" class="btn-social" style="background: #24292e; color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px;">
+                    <span style="font-size: 18px;">⚫</span> Continue with GitHub
+                </button>
+                <button type="button" onclick="nexusai.socialLogin('microsoft')" class="btn-social" style="background: #0078D4; color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px;">
+                    <span style="font-size: 18px;">⬜</span> Continue with Microsoft
+                </button>
+            </div>
+            
+            <!-- Divider -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+                <div style="flex: 1; height: 1px; background: #E0E7FF;"></div>
+                <span style="font-size: 12px; color: #64748B;">Or use email</span>
+                <div style="flex: 1; height: 1px; background: #E0E7FF;"></div>
+            </div>
+            
+            <!-- Email Registration -->
+            <div class="flex flex-col gap-16">
+                <div>
+                    <label class="text-14 font-600 mb-8" style="display: block;">Full Name</label>
+                    <input type="text" id="setupName" class="input-field" placeholder="John Doe" required>
+                </div>
+                <div>
+                    <label class="text-14 font-600 mb-8" style="display: block;">Email Address</label>
+                    <input type="email" id="setupEmail" class="input-field" placeholder="you@example.com" required>
+                </div>
+                <div>
+                    <label class="text-14 font-600 mb-8" style="display: block;">Password</label>
+                    <input type="password" id="setupPassword" class="input-field" placeholder="••••••••" required>
+                </div>
+                <button type="button" onclick="nexusai.moveToStep(2)" class="btn-primary">Next</button>
+            </div>
+        </div>
+        
+        <!-- Step 2 -->
+        <div id="setupStep2" style="display: none;">
+            <h2>Add Your API Key</h2>
+            <p class="mb-24">Get a free Groq API key to power your AI</p>
+            
+            <div class="feature-card mb-24" style="border: 1px solid #BFDBFE; background: #EFF6FF;">
+                <p class="text-sm mb-16"><strong>New to Groq?</strong> Get a free API key in 30 seconds:</p>
+                <ol class="text-sm" style="margin: 0 0 0 20px; color: #475569;">
+                    <li>Visit <a href="https://console.groq.com" target="_blank" style="color: #0099FF; text-decoration: none;">console.groq.com</a></li>
+                    <li>Sign up for free</li>
+                    <li>Copy your API key</li>
+                    <li>Paste it below</li>
+                </ol>
+            </div>
+            
+            <div class="flex flex-col gap-16">
+                <div>
+                    <label class="text-14 font-600 mb-8" style="display: block;">Groq API Key</label>
+                    <input type="password" id="setupApiKey" class="input-field" placeholder="gsk_..." required>
+                </div>
+                <div class="flex gap-12">
+                    <button type="button" onclick="nexusai.moveToStep(1)" class="btn-secondary">Back</button>
+                    <button type="button" onclick="nexusai.moveToStep(3)" class="btn-primary">Next</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 3 -->
+        <div id="setupStep3" style="display: none;">
+            <h2>Preferences</h2>
+            <p class="mb-24">Customize your experience</p>
+            
+            <div class="flex flex-col gap-24">
+                <div>
+                    <label class="text-14 font-600 mb-16" style="display: block;">Theme</label>
+                    <div class="flex gap-12">
+                        <button type="button" onclick="nexusai.setTheme('light')" id="themeLight" class="btn-secondary" style="flex: 1; border: 2px solid #0099FF;">☀️ Light</button>
+                        <button type="button" onclick="nexusai.setTheme('dark')" id="themeDark" class="btn-secondary" style="flex: 1; border: 2px solid #E0E7FF;">🌙 Dark</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="text-14 font-600 mb-16" style="display: block;">Plan</label>
+                    <div class="flex flex-col gap-12">
+                        <div class="feature-card" onclick="nexusai.setPlan('free')" style="border: 2px solid #0099FF;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <p class="font-600 mb-8">Free Plan</p>
+                                    <p class="text-sm">Standard AI features</p>
+                                </div>
+                                <input type="radio" name="plan" value="free" checked>
+                            </div>
+                        </div>
+                        <div class="feature-card" onclick="nexusai.setPlan('pro')">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                        <p class="font-600 mb-0">Pro Plan</p>
+                                        <span class="badge-pro">BETA</span>
+                                    </div>
+                                    <p class="text-sm">Advanced features & priority</p>
+                                </div>
+                                <input type="radio" name="plan" value="pro">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-12">
+                    <button type="button" onclick="nexusai.moveToStep(2)" class="btn-secondary">Back</button>
+                    <button type="button" onclick="nexusai.completeSetup()" class="btn-primary">Complete Setup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="appScreen">
+    <header>
+        <div class="header-brand">
+            <svg width="32" height="32" viewBox="0 0 80 80" fill="none">
+                <defs>
+                    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#0099FF;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#00DD88;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect x="10" y="10" width="60" height="60" rx="16" fill="url(#grad2)"/>
+                <circle cx="40" cy="35" r="12" fill="white"/>
+                <path d="M 40 50 Q 30 55 25 60" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <path d="M 40 50 Q 50 55 55 60" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+            <div>
+                <h3 style="font-weight: bold; margin: 0; font-size: 16px;">NexusAI</h3>
+                <p id="userGreeting" style="font-size: 11px; color: #64748B; margin: 0;">Welcome back!</p>
+            </div>
+        </div>
+        
+        <div class="header-actions">
+            <button id="appWriterBtn" class="icon-btn" title="Application Writer">📝</button>
+            <button id="themeToggle" class="icon-btn">🌙</button>
+            <button id="proBtn" class="icon-btn" style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); color: white; font-size: 12px; padding: 6px 12px; border-radius: 6px;">Pro</button>
+            <button id="settingsBtn" class="icon-btn">⚙️</button>
+            <button id="logoutBtn" class="icon-btn" style="background: #ff6b6b; color: white; padding: 6px 12px; font-size: 12px;">Logout</button>
+        </div>
+    </header>
+    
+    <main>
+        <div id="messagesContainer">
+            <div class="welcome-message">
+                <div style="width: 64px; height: 64px; border-radius: 24px; background: linear-gradient(135deg, #0099FF 0%, #00DD88 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    <span style="color: white; font-size: 32px;">💬</span>
+                </div>
+                <h2>Start a Conversation</h2>
+                <p>Ask me anything - I'm here to help!</p>
+            </div>
+        </div>
+        
+        <!-- Pro Modal -->
+        <div id="proModal" class="modal-overlay">
+            <div class="modal-content">
+                <div style="padding: 32px 24px; text-align: center;">
+                    <div style="width: 80px; height: 80px; border-radius: 24px; background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                        <span style="color: white; font-size: 40px;">⭐</span>
+                    </div>
+                    <h2 style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">NexusAI Pro</h2>
+                    <span class="badge-pro">BETA - Early Access</span>
+                    
+                    <div class="feature-card mt-12 mb-24" style="text-align: left; border: none; padding: 20px 0;">
+                        <p style="text-align: center; font-weight: 600; margin-bottom: 16px;">Unlock Premium Features</p>
+                        <div class="flex flex-col gap-16">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 20px;">🎤</span>
+                                <div>
+                                    <p style="font-weight: 600; margin: 0;">Voice Input & Output</p>
+                                    <p class="text-sm" style="margin: 0;">Talk to your AI</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 20px;">🖼️</span>
+                                <div>
+                                    <p style="font-weight: 600; margin: 0;">Image Analysis</p>
+                                    <p class="text-sm" style="margin: 0;">Upload & analyze images</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 20px;">⚡</span>
+                                <div>
+                                    <p style="font-weight: 600; margin: 0;">Advanced Models</p>
+                                    <p class="text-sm" style="margin: 0;">Access faster & smarter AI</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 20px;">📊</span>
+                                <div>
+                                    <p style="font-weight: 600; margin: 0;">Analytics & History</p>
+                                    <p class="text-sm" style="margin: 0;">Track your conversations</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="nexusai.upgradePro()" class="btn-primary mb-16" style="background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);">Join Pro Beta</button>
+                    <button onclick="nexusai.closeProModal()" class="btn-secondary">Maybe Later</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal-overlay">
+            <div class="modal-content">
+                <div style="padding: 24px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 20px; font-weight: bold; margin: 0;">Settings</h3>
+                    <button onclick="nexusai.closeSettings()" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
+                </div>
+                <div style="padding: 24px;">
+                    <div class="mb-24">
+                        <h4 class="font-600 mb-16">API Configuration</h4>
+                        <input type="password" id="apiKeyInput" class="input-field" placeholder="gsk_..." style="margin-bottom: 8px;">
+                        <p class="text-sm">Get free key at <a href="https://console.groq.com" target="_blank" style="color: #0099FF; text-decoration: none;">console.groq.com</a></p>
+                    </div>
+                    
+                    <button onclick="nexusai.saveSettings()" class="btn-primary mb-16">Save Settings</button>
+                    
+                    <div style="border-top: 1px solid #E2E8F0; padding-top: 16px;">
+                        <p class="text-sm">
+                            <strong>Account:</strong> <span id="accountEmail"></span><br>
+                            <strong>Plan:</strong> <span id="accountPlan">Free</span><br>
+                            <strong>Joined:</strong> <span id="accountDate"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Writer Modal -->
+        <div id="appWriterModal" class="modal-overlay">
+            <div class="modal-content">
+                <div style="padding: 24px;">
+                    <h2 style="margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 28px;">📝</span> Application Writer
+                    </h2>
+
+                    <div style="display: flex; gap: 8px; margin-bottom: 24px;">
+                        <button type="button" class="app-type-btn" data-type="job" style="flex: 1; padding: 12px; background: #0099FF; color: white; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;">Job</button>
+                        <button type="button" class="app-type-btn" data-type="university" style="flex: 1; padding: 12px; background: #E2E8F0; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;">University</button>
+                        <button type="button" class="app-type-btn" data-type="scholarship" style="flex: 1; padding: 12px; background: #E2E8F0; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;">Scholarship</button>
+                        <button type="button" class="app-type-btn" data-type="visa" style="flex: 1; padding: 12px; background: #E2E8F0; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;">Visa</button>
+                    </div>
+
+                    <form id="applicationForm" style="display: flex; flex-direction: column; gap: 12px;">
+                        <div>
+                            <label class="text-sm" style="display: block; margin-bottom: 4px; font-weight: 600;">Full Name</label>
+                            <input type="text" id="appFullName" class="input-field" placeholder="Your name" required>
+                        </div>
+                        <div>
+                            <label class="text-sm" style="display: block; margin-bottom: 4px; font-weight: 600;">Email</label>
+                            <input type="email" id="appEmail" class="input-field" placeholder="your@email.com" required>
+                        </div>
+                        <div>
+                            <label class="text-sm" style="display: block; margin-bottom: 4px; font-weight: 600;">Phone</label>
+                            <input type="tel" id="appPhone" class="input-field" placeholder="Your phone number">
+                        </div>
+                        <div id="jobFields" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div>
+                                <label class="text-sm" style="display: block; margin-bottom: 4px; font-weight: 600;">Target Position</label>
+                                <input type="text" id="appTargetPosition" class="input-field" placeholder="e.g., Software Engineer">
+                            </div>
+                        </div>
+                        <div id="universityFields" style="display: none; flex-direction: column; gap: 12px;">
+                            <div>
+                                <label class="text-sm" style="display: block; margin-bottom: 4px; font-weight: 600;">Target Institution</label>
+                                <input type="text" id="appTargetInstitution" class="input-field" placeholder="e.g., MIT, Harvard">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-sm" style="display: block; margin-bottom: 4px; font-weight: 600;">Experience & Skills</label>
+                            <textarea id="appExperience" class="input-field" placeholder="Describe your relevant experience..." style="min-height: 80px; padding: 8px;"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-sm" style="display: block; margin-bottom: 4px; font-weight: 600;">Qualifications</label>
+                            <textarea id="appQualifications" class="input-field" placeholder="Your education, certifications, etc..." style="min-height: 80px; padding: 8px;"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-sm" style="display: block; margin-bottom: 4px; font-weight: 600;">Why You're a Good Fit</label>
+                            <textarea id="appMotivation" class="input-field" placeholder="Your motivation and goals..." style="min-height: 80px; padding: 8px;"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-sm" style="display: block; margin-bottom: 4px; font-weight: 600;">Additional Information</label>
+                            <textarea id="appAdditionalInfo" class="input-field" placeholder="Anything else you'd like to mention..." style="min-height: 60px; padding: 8px;"></textarea>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 16px;">
+                            <button type="submit" class="btn-primary" style="flex: 1; padding: 12px;">Generate Application</button>
+                            <button type="button" id="closeAppWriter" class="btn-secondary" style="flex: 1; padding: 12px; background: #E2E8F0; color: #0f172a; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
+                        </div>
+                    </form>
+
+                    <div id="appWriterOutput" style="display: none; margin-top: 24px; padding-top: 24px; border-top: 1px solid #E2E8F0;">
+                        <h3 style="margin-bottom: 12px;">Generated Application:</h3>
+                        <div id="generatedText" style="background: #F8FAFC; border-radius: 8px; padding: 16px; max-height: 400px; overflow-y: auto; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;"></div>
+                        <button type="button" id="copyAppBtn" style="width: 100%; margin-top: 12px; padding: 12px; background: #0099FF; color: white; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;">📋 Copy to Clipboard</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div class="input-area">
+        <form id="messageForm">
+            <input type="text" id="messageInput" class="input-field" placeholder="Ask me anything..." autocomplete="off" required>
+            <button type="submit" class="btn-primary" style="padding: 12px 20px;">Send</button>
+        </form>
+    </div>
+</div>
+
+<script>
+// Global state
+const nexusai = {
+    state: {
+        currentUser: null,
+        users: [],
+        setupTheme: 'light',
+        setupPlan: 'free',
+        config: {
+            api: 'https://api.groq.com/openai/v1/chat/completions',
+            apiKey: localStorage.getItem('groq_api_key') || 'YOUR_GROQ_API_KEY',
+            model: 'llama-3.1-8b-instant',
+        },
+        appMode: 'chat',
+        applicationForm: {
+            type: 'job',
+            fullName: '',
+            email: '',
+            phone: '',
+            targetPosition: '',
+            targetInstitution: '',
+            experience: '',
+            qualifications: '',
+            motivation: '',
+            additionalInfo: ''
+        }
+    },
+    
+    // Initialize
+    init() {
+        this.loadData();
+        this.setupTheme();
+        this.showAppropriateScreen();
+        this.attachListeners();
+    },
+    
+    // Load data
+    loadData() {
+        const saved = localStorage.getItem('nexusai_users');
+        if (saved) this.state.users = JSON.parse(saved);
+        
+        const user = localStorage.getItem('nexusai_current_user');
+        if (user) this.state.currentUser = JSON.parse(user);
+        
+        const theme = localStorage.getItem('nexusai_theme') || 'light';
+        this.state.setupTheme = theme;
+    },
+    
+    // Setup theme
+    setupTheme() {
+        const theme = localStorage.getItem('nexusai_theme') || 'light';
+        document.body.className = theme === 'dark' ? 'dark-mode' : '';
+        document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+    },
+    
+    // Show appropriate screen
+    showAppropriateScreen() {
+        if (this.state.currentUser) {
+            this.showAppScreen();
+        } else if (!localStorage.getItem('nexusai_skipped_onboarding')) {
+            this.showOnboardingScreen();
+        } else {
+            this.showSetupScreen();
+        }
+    },
+    
+    // Show screens
+    showOnboardingScreen() {
+        document.getElementById('onboardingScreen').style.display = 'flex';
+        document.getElementById('setupScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'none';
+    },
+    
+    showSetupScreen() {
+        document.getElementById('onboardingScreen').style.display = 'none';
+        document.getElementById('setupScreen').style.display = 'block';
+        document.getElementById('appScreen').style.display = 'none';
+        this.moveToStep(1);
+    },
+    
+    showAppScreen() {
+        document.getElementById('onboardingScreen').style.display = 'none';
+        document.getElementById('setupScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'flex';
+        
+        if (this.state.currentUser) {
+            const name = this.state.currentUser.name.split(' ')[0];
+            document.getElementById('userGreeting').textContent = `Welcome back, ${name}!`;
+        }
+    },
+    
+    // Onboarding
+    startOnboarding() {
+        localStorage.removeItem('nexusai_skipped_onboarding');
+        this.showSetupScreen();
+    },
+    
+    skipOnboarding() {
+        localStorage.setItem('nexusai_skipped_onboarding', 'true');
+        this.showSetupScreen();
+    },
+    
+    // Social Login
+    socialLogin(provider) {
+        // Simulate social login - in production, use OAuth2 flow
+        const providers = {
+            google: { name: 'Google', icon: '🔵', color: '#4285F4' },
+            facebook: { name: 'Facebook', icon: '👤', color: '#1877F2' },
+            github: { name: 'GitHub', icon: '⚫', color: '#24292e' },
+            microsoft: { name: 'Microsoft', icon: '⬜', color: '#0078D4' }
+        };
+        
+        const providerInfo = providers[provider];
+        if (!providerInfo) return;
+        
+        // Generate social login data
+        const socialData = {
+            id: `${provider}_${Date.now()}`,
+            email: `user_${Math.random().toString(36).substr(2, 9)}@${provider}.com`,
+            name: `${providerInfo.name} User`,
+            provider: provider,
+            avatar: `https://via.placeholder.com/100?text=${providerInfo.name}`,
+            createdAt: new Date().toISOString()
+        };
+        
+        // Create account with social login
+        const newUser = {
+            id: 'oauth_' + Date.now(),
+            name: socialData.name,
+            email: socialData.email,
+            password: null,
+            apiKey: null,
+            plan: 'free',
+            theme: this.state.setupTheme,
+            socialProvider: provider,
+            socialId: socialData.id,
+            avatar: socialData.avatar,
+            createdAt: socialData.createdAt
+        };
+        
+        this.state.users.push(newUser);
+        this.state.currentUser = newUser;
+        
+        localStorage.setItem('nexusai_users', JSON.stringify(this.state.users));
+        localStorage.setItem('nexusai_current_user', JSON.stringify(newUser));
+        
+        // Move to API key step (skip email/password)
+        document.getElementById('setupName').value = newUser.name;
+        document.getElementById('setupEmail').value = newUser.email;
+        
+        alert(`✅ Logged in with ${providerInfo.name}! Now add your Groq API key.`);
+        this.moveToStep(2);
+    },
+    
+    // Setup wizard
+    moveToStep(step) {
+        document.getElementById('setupStep1').style.display = step === 1 ? 'block' : 'none';
+        document.getElementById('setupStep2').style.display = step === 2 ? 'block' : 'none';
+        document.getElementById('setupStep3').style.display = step === 3 ? 'block' : 'none';
+        document.getElementById('setupStep').textContent = `Step ${step} of 3`;
+        document.getElementById('setupProgress').style.width = (step * 33.33) + '%';
+    },
+    
+    setTheme(theme) {
+        this.state.setupTheme = theme;
+        document.getElementById('themeLight').style.borderColor = theme === 'light' ? '#0099FF' : '#E0E7FF';
+        document.getElementById('themeDark').style.borderColor = theme === 'dark' ? '#0099FF' : '#E0E7FF';
+    },
+    
+    setPlan(plan) {
+        this.state.setupPlan = plan;
+    },
+    
+    completeSetup() {
+        const name = document.getElementById('setupName').value.trim();
+        const email = document.getElementById('setupEmail').value.trim();
+        const password = document.getElementById('setupPassword').value;
+        const apiKey = document.getElementById('setupApiKey').value.trim();
+        
+        if (!name || !email || !password || !apiKey) {
+            alert('Please fill in all fields');
+            return;
+        }
+        
+        const newUser = {
+            id: 'user_' + Date.now(),
+            name,
+            email,
+            password: btoa(password),
+            apiKey,
+            plan: this.state.setupPlan,
+            theme: this.state.setupTheme,
+            createdAt: new Date().toISOString()
+        };
+        
+        this.state.users.push(newUser);
+        this.state.currentUser = newUser;
+        
+        localStorage.setItem('nexusai_users', JSON.stringify(this.state.users));
+        localStorage.setItem('nexusai_current_user', JSON.stringify(newUser));
+        localStorage.setItem('groq_api_key', apiKey);
+        localStorage.setItem('nexusai_theme', this.state.setupTheme);
+        
+        this.state.config.apiKey = apiKey;
+        this.applyTheme(this.state.setupTheme);
+        this.showAppScreen();
+    },
+    
+    applyTheme(theme) {
+        document.body.className = theme === 'dark' ? 'dark-mode' : '';
+        localStorage.setItem('nexusai_theme', theme);
+        document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+    },
+    
+    // Theme toggle
+    toggleTheme() {
+        const current = document.body.className === 'dark-mode' ? 'light' : 'dark';
+        this.applyTheme(current);
+    },
+    
+    // Pro modal
+    openProModal() {
+        document.getElementById('proModal').classList.add('show');
+    },
+    
+    closeProModal() {
+        document.getElementById('proModal').classList.remove('show');
+    },
+    
+    upgradePro() {
+        if (this.state.currentUser) {
+            this.state.currentUser.plan = 'pro';
+            localStorage.setItem('nexusai_current_user', JSON.stringify(this.state.currentUser));
+            alert('Welcome to NexusAI Pro Beta! Enjoy your premium features.');
+            this.closeProModal();
+        }
+    },
+    
+    // Settings
+    openSettings() {
+        document.getElementById('settingsModal').classList.add('show');
+        document.getElementById('apiKeyInput').value = this.state.config.apiKey;
+        
+        if (this.state.currentUser) {
+            document.getElementById('accountEmail').textContent = this.state.currentUser.email;
+            document.getElementById('accountPlan').textContent = (this.state.currentUser.plan || 'Free').charAt(0).toUpperCase() + (this.state.currentUser.plan || 'Free').slice(1);
+            const date = new Date(this.state.currentUser.createdAt);
+            document.getElementById('accountDate').textContent = date.toLocaleDateString();
+        }
+    },
+    
+    closeSettings() {
+        document.getElementById('settingsModal').classList.remove('show');
+    },
+    
+    saveSettings() {
+        const apiKey = document.getElementById('apiKeyInput').value.trim();
+        if (apiKey && apiKey !== '') {
+            localStorage.setItem('groq_api_key', apiKey);
+            this.state.config.apiKey = apiKey;
+            if (this.state.currentUser) {
+                this.state.currentUser.apiKey = apiKey;
+                localStorage.setItem('nexusai_current_user', JSON.stringify(this.state.currentUser));
+            }
+            alert('Settings saved!');
+            this.closeSettings();
+        } else {
+            alert('Please enter an API key');
+        }
+    },
+    
+    // Logout
+    logout() {
+        this.state.currentUser = null;
+        localStorage.removeItem('nexusai_current_user');
+        document.getElementById('messagesContainer').innerHTML = '';
+        this.showOnboardingScreen();
+    },
+    
+    // Messages
+    addMessage(content, role) {
+        const container = document.getElementById('messagesContainer');
+        const msgDiv = document.createElement('div');
+        msgDiv.style.display = 'flex';
+        msgDiv.style.justifyContent = role === 'user' ? 'flex-end' : 'flex-start';
+        msgDiv.style.gap = '8px';
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble ' + (role === 'user' ? 'message-user' : 'message-assistant');
+        bubble.textContent = content;
+        
+        msgDiv.appendChild(bubble);
+        container.appendChild(msgDiv);
+        container.scrollTop = container.scrollHeight;
+    },
+    
+    // Send message
+    async sendMessage(message) {
+        if (!message.trim()) return;
+        
+        this.addMessage(message, 'user');
+        
+        try {
+            if (this.state.config.apiKey === 'YOUR_GROQ_API_KEY_HERE') {
+                this.addMessage('⚠️ Please add your Groq API key in Settings first', 'assistant');
+                return;
+            }
+            
+            const loading = document.createElement('div');
+            loading.style.textAlign = 'center';
+            loading.innerHTML = '<p style="color: #64748B;">Thinking...</p>';
+            document.getElementById('messagesContainer').appendChild(loading);
+            
+            const response = await fetch(this.state.config.api, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.state.config.apiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: this.state.config.model,
+                    messages: [{ role: 'user', content: message }],
+                    max_tokens: 1000,
+                    temperature: 0.7,
+                })
+            });
+            
+            if (loading.parentElement) loading.parentElement.removeChild(loading);
+            
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+            
+            const data = await response.json();
+            const aiMessage = data.choices[0].message.content;
+            this.addMessage(aiMessage, 'assistant');
+            
+        } catch (error) {
+            this.addMessage(`❌ Error: ${error.message}`, 'assistant');
+        }
+    },
+
+    // Application Writer Functions
+    openAppWriter() {
+        document.getElementById('appWriterModal').classList.add('show');
+    },
+
+    closeAppWriter() {
+        document.getElementById('appWriterModal').classList.remove('show');
+        document.getElementById('appWriterOutput').style.display = 'none';
+    },
+
+    switchAppType(type) {
+        this.state.applicationForm.type = type;
+        document.querySelectorAll('.app-type-btn').forEach(btn => {
+            btn.style.background = btn.dataset.type === type ? '#0099FF' : '#E2E8F0';
+            btn.style.color = btn.dataset.type === type ? 'white' : '#0f172a';
+        });
+        
+        // Show/hide relevant fields
+        document.getElementById('jobFields').style.display = type === 'job' ? 'flex' : 'none';
+        document.getElementById('universityFields').style.display = (type === 'university' || type === 'scholarship') ? 'flex' : 'none';
+    },
+
+    generateApplication() {
+        const fullName = document.getElementById('appFullName').value;
+        const email = document.getElementById('appEmail').value;
+        const phone = document.getElementById('appPhone').value;
+        const targetPosition = document.getElementById('appTargetPosition').value;
+        const targetInstitution = document.getElementById('appTargetInstitution').value;
+        const experience = document.getElementById('appExperience').value;
+        const qualifications = document.getElementById('appQualifications').value;
+        const motivation = document.getElementById('appMotivation').value;
+        const additionalInfo = document.getElementById('appAdditionalInfo').value;
+        const appType = this.state.applicationForm.type;
+
+        const prompt = this.buildApplicationPrompt(appType, fullName, email, phone, targetPosition, targetInstitution, experience, qualifications, motivation, additionalInfo);
+        
+        const loading = document.createElement('div');
+        loading.innerHTML = '<div class="spinner"></div> Generating your application...';
+        loading.style.textAlign = 'center';
+        loading.style.padding = '16px';
+        document.getElementById('appWriterOutput').appendChild(loading);
+        document.getElementById('appWriterOutput').style.display = 'block';
+
+        this.callGroqAPI(prompt).then(response => {
+            if (loading.parentElement) loading.parentElement.removeChild(loading);
+            document.getElementById('generatedText').innerText = response;
+        }).catch(error => {
+            if (loading.parentElement) loading.parentElement.removeChild(loading);
+            document.getElementById('generatedText').innerText = `Error: ${error.message}`;
+        });
+    },
+
+    buildApplicationPrompt(type, fullName, email, phone, targetPosition, targetInstitution, experience, qualifications, motivation, additionalInfo) {
+        let prompt = '';
+
+        if (type === 'job') {
+            prompt = `Please write a professional job application letter for:\n
+Name: ${fullName}
+Email: ${email}
+Phone: ${phone}
+Position: ${targetPosition}
+Experience: ${experience}
+Qualifications: ${qualifications}
+Why I'm a good fit: ${motivation}
+Additional info: ${additionalInfo}
+
+Please write a compelling cover letter that highlights their strengths and makes them stand out to employers.`;
+        } else if (type === 'university') {
+            prompt = `Please help write a university application essay for:\n
+Name: ${fullName}
+Email: ${email}
+Target Institution: ${targetInstitution}
+Academic Background: ${qualifications}
+Relevant Experience: ${experience}
+Why This University: ${motivation}
+Additional info: ${additionalInfo}
+
+Please write a compelling personal statement that showcases their achievements and why they would be a great fit.`;
+        } else if (type === 'scholarship') {
+            prompt = `Please write a scholarship application essay for:\n
+Name: ${fullName}
+Email: ${email}
+Institution: ${targetInstitution}
+Academic Achievements: ${qualifications}
+Relevant Experience: ${experience}
+Why You Deserve This: ${motivation}
+Additional info: ${additionalInfo}
+
+Please write a compelling scholarship application that highlights financial need and academic potential.`;
+        } else if (type === 'visa') {
+            prompt = `Please help prepare a visa application statement for:\n
+Name: ${fullName}
+Email: ${email}
+Destination: ${targetInstitution}
+Professional Background: ${experience}
+Qualifications: ${qualifications}
+Purpose of Visit: ${motivation}
+Additional info: ${additionalInfo}
+
+Please write a clear and persuasive visa application statement.`;
+        }
+
+        return prompt;
+    },
+
+    callGroqAPI(prompt) {
+        return fetch(this.state.config.api, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.state.config.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: this.state.config.model,
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.7,
+                max_tokens: 2000
+            })
+        }).then(r => {
+            if (!r.ok) throw new Error(`API Error: ${r.status}`);
+            return r.json();
+        }).then(data => data.choices[0].message.content);
+    },
+
+    copyToClipboard() {
+        const text = document.getElementById('generatedText').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('✅ Application copied to clipboard!');
+        }).catch(() => {
+            alert('Failed to copy. Please try again.');
+        });
+    },
+    
+    // Attach listeners
+    attachListeners() {
+        // Onboarding
+        document.getElementById('startOnboardingBtn').addEventListener('click', () => this.startOnboarding());
+        document.getElementById('skipOnboardingBtn').addEventListener('click', () => this.skipOnboarding());
+        
+        // App
+        document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
+        document.getElementById('proBtn').addEventListener('click', () => this.openProModal());
+        document.getElementById('settingsBtn').addEventListener('click', () => this.openSettings());
+        document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+        document.getElementById('appWriterBtn').addEventListener('click', () => this.openAppWriter());
+        
+        // Application Writer
+        document.querySelectorAll('.app-type-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.switchAppType(e.target.dataset.type));
+        });
+        document.getElementById('applicationForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.generateApplication();
+        });
+        document.getElementById('closeAppWriter').addEventListener('click', () => this.closeAppWriter());
+        document.getElementById('copyAppBtn').addEventListener('click', () => this.copyToClipboard());
+        
+        // Messages
+        document.getElementById('messageForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('messageInput');
+            this.sendMessage(input.value);
+            input.value = '';
+        });
+    }
+};
+
+// Start when ready
+document.addEventListener('DOMContentLoaded', () => nexusai.init());
+</script>
+
+</body>
+</html>

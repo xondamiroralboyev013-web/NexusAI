@@ -1,0 +1,40 @@
+{
+  "name": "NexusAI Pro - Advanced AI Assistant",
+  "short_name": "NexusAI",
+  "description": "Powerful AI Assistant powered by Groq - Ultra-fast responses with research, creation, and analysis modes",
+  "start_url": "/app.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0099FF",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%230099FF;stop-opacity:1' /><stop offset='100%' style='stop-color:%2300DD88;stop-opacity:1' /></linearGradient></defs><rect width='192' height='192' fill='url(%23g)' rx='45'/><circle cx='96' cy='96' r='65' fill='none' stroke='white' stroke-width='4' opacity='0.8'/><circle cx='96' cy='96' r='40' fill='white' opacity='0.9'/><circle cx='70' cy='70' r='10' fill='%230099FF'/><circle cx='122' cy='70' r='10' fill='%2300DD88'/><circle cx='96' cy='120' r='10' fill='%230099FF'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%230099FF;stop-opacity:1' /><stop offset='100%' style='stop-color:%2300DD88;stop-opacity:1' /></linearGradient></defs><rect width='512' height='512' fill='url(%23g)' rx='120'/><circle cx='256' cy='256' r='170' fill='none' stroke='white' stroke-width='10' opacity='0.8'/><circle cx='256' cy='256' r='100' fill='white' opacity='0.9'/><circle cx='180' cy='180' r='25' fill='%230099FF'/><circle cx='332' cy='180' r='25' fill='%2300DD88'/><circle cx='256' cy='320' r='25' fill='%230099FF'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "New Chat",
+      "short_name": "Chat",
+      "description": "Start a new AI conversation",
+      "url": "/app.html?mode=chat"
+    },
+    {
+      "name": "Settings",
+      "short_name": "Config",
+      "description": "App settings and preferences",
+      "url": "/app.html?mode=settings"
+    }
+  ]
+}

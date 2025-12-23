@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NexusAI Pro - Advanced AI Assistant</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0099FF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NexusAI">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body.light-mode {
+            background-color: #f5f7fa;
+            color: #0f172a;
+        }
+        
+        body.dark-mode {
+            background-color: #0a0e27;
+            color: #fafafa;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #0099FF 0%, #00DD88 100%);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0099FF 0%, #0077CC 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 153, 255, 0.3);
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #E0E7FF;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .dark-mode .input-field {
+            border-color: #27272A;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+        
+        .light-mode .input-field {
+            background: white;
+            color: #0f172a;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #0099FF;
+            box-shadow: 0 0 0 3px rgba(0, 153, 255, 0.1);
+        }
+        
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .message-user {
+            background: linear-gradient(135deg, #0099FF 0%, #0077CC 100%);
+            color: white;
+            text-align: right;
+        }
+        
+        .message-assistant {
+            background: rgba(0, 0, 0, 0.05);
+            color: inherit;
+            text-align: left;
+        }
+        
+        .dark-mode .message-assistant {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0099FF 0%, #00DD88 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body class="light-mode">
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="w-full h-full flex items-center justify-center px-4">
+    <div class="w-full max-w-md">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div class="inline-block w-16 h-16 gradient-bg rounded-3xl flex items-center justify-center mb-4 shadow-lg">
+                <span style="color: white; font-size: 32px; font-weight: bold;">N</span>
+            </div>
+            <h1 style="font-size: 32px; font-weight: bold; margin: 0 0 8px 0;">NexusAI</h1>
+            <p style="color: #64748B; margin: 0;">Advanced AI Assistant</p>
+        </div>
+        
+        <!-- Auth Tabs -->
+        <div style="display: flex; gap: 16px; margin-bottom: 32px; background: #f0f0f0; padding: 8px; border-radius: 12px;">
+            <button class="authTab" data-tab="login" style="flex: 1; padding: 12px; border: none; background: white; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Sign In
+            </button>
+            <button class="authTab" data-tab="signup" style="flex: 1; padding: 12px; border: none; background: transparent; border-radius: 8px; font-weight: 600; cursor: pointer; opacity: 0.6;">
+                Sign Up
+            </button>
+        </div>
+        
+        <!-- Login Form -->
+        <form id="loginForm" class="authForm space-y-4" style="display: block;">
+            <div>
+                <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Email Address</label>
+                <input type="email" id="loginEmail" class="input-field" placeholder="you@example.com" required>
+            </div>
+            <div>
+                <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Password</label>
+                <input type="password" id="loginPassword" class="input-field" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%;">
+                Sign In
+            </button>
+        </form>
+        
+        <!-- Signup Form -->
+        <form id="signupForm" class="authForm" style="display: none;">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Full Name</label>
+                <input type="text" id="signupName" class="input-field" placeholder="John Doe" required>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Email Address</label>
+                <input type="email" id="signupEmail" class="input-field" placeholder="you@example.com" required>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Password</label>
+                <input type="password" id="signupPassword" class="input-field" placeholder="••••••••" required>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Confirm Password</label>
+                <input type="password" id="signupConfirm" class="input-field" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%;">
+                Create Account
+            </button>
+        </form>
+        
+        <!-- Demo Login -->
+        <div style="margin-top: 24px; padding: 16px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px;">
+            <p style="font-weight: 600; margin: 0 0 8px 0; font-size: 14px;">Demo Credentials:</p>
+            <p style="font-size: 12px; margin: 0; color: #475569;">
+                Email: <code style="background: #E0E7FF; padding: 4px 8px; border-radius: 4px;">demo@nexusai.com</code><br>
+                Password: <code style="background: #E0E7FF; padding: 4px 8px; border-radius: 4px;">demo123</code>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN APP SCREEN -->
+<div id="appScreen" style="display: none; height: 100%; flex-direction: column;">
+    <!-- Header -->
+    <header style="border-bottom: 1px solid #E2E8F0; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="gradient-bg" style="width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-weight: bold;">N</span>
+            </div>
+            <div>
+                <h1 style="font-weight: bold; margin: 0; font-size: 18px;">NexusAI</h1>
+                <p style="font-size: 12px; color: #64748B; margin: 0;">AI Assistant</p>
+            </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="themeToggle" style="padding: 8px; border: none; background: #f0f0f0; border-radius: 8px; cursor: pointer; font-size: 18px;">🌙</button>
+            <button id="logoutBtn" style="padding: 8px 16px; background: #ff6b6b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">Logout</button>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column;">
+        <!-- Messages Container -->
+        <div id="messagesContainer" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; margin-bottom: 16px; padding: 8px;">
+            <div style="text-align: center; padding: 32px 16px;">
+                <div class="gradient-bg" style="width: 64px; height: 64px; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    <span style="color: white; font-size: 32px;">💬</span>
+                </div>
+                <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 8px 0;">Welcome to NexusAI</h2>
+                <p style="color: #64748B; margin: 0 0 16px 0;">Start a conversation with AI</p>
+            </div>
+        </div>
+        
+        <!-- Settings Modal -->
+        <div id="settingsModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="background: white; border-radius: 16px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <div style="padding: 24px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 20px; font-weight: bold; margin: 0;">Settings</h3>
+                    <button id="closeSettingsModal" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
+                </div>
+                
+                <div style="padding: 24px;">
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="font-weight: 600; margin: 0 0 12px 0;">Groq API Key</h4>
+                        <input type="password" id="apiKeyInput" class="input-field" placeholder="gsk_..." style="margin-bottom: 8px;">
+                        <p style="font-size: 12px; color: #64748B; margin: 0;">
+                            Get free key at <a href="https://console.groq.com" target="_blank" style="color: #0099FF; text-decoration: none;">console.groq.com</a>
+                        </p>
+                    </div>
+                    
+                    <button id="saveSettingsBtn" class="btn-primary" style="width: 100%; margin-top: 16px;">
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Input Area -->
+    <div style="border-top: 1px solid #E2E8F0; padding: 16px; background: inherit;">
+        <form id="messageForm" style="display: flex; gap: 12px;">
+            <input 
+                type="text" 
+                id="messageInput" 
+                class="input-field" 
+                placeholder="Ask me anything..." 
+                autocomplete="off"
+                style="flex: 1; margin: 0;"
+            >
+            <button type="submit" class="btn-primary" style="margin: 0; padding: 12px 20px;">
+                Send
+            </button>
+        </form>
+        <button id="settingsBtn" style="margin-top: 12px; width: 100%; padding: 12px; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+            ⚙️ Settings
+        </button>
+    </div>
+</div>
+
+<script>
+// ==================== INITIALIZE ====================
+let appState = {
+    currentUser: null,
+    users: [],
+    config: {
+        api: 'https://api.groq.com/openai/v1/chat/completions',
+        apiKey: localStorage.getItem('groq_api_key') || 'YOUR_GROQ_API_KEY_HERE',
+        model: 'llama-3.1-8b-instant',
+    }
+};
+
+// Load data from localStorage
+function initializeApp() {
+    // Load users
+    const savedUsers = localStorage.getItem('nexusai_users');
+    if (savedUsers) {
+        appState.users = JSON.parse(savedUsers);
+    }
+    
+    // Load current user
+    const savedUser = localStorage.getItem('nexusai_current_user');
+    if (savedUser) {
+        appState.currentUser = JSON.parse(savedUser);
+    }
+    
+    // Add demo user if not exists
+    if (!appState.users.find(u => u.email === 'demo@nexusai.com')) {
+        appState.users.push({
+            id: 'demo_' + Date.now(),
+            name: 'Demo User',
+            email: 'demo@nexusai.com',
+            password: btoa('demo123'),
+            createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('nexusai_users', JSON.stringify(appState.users));
+    }
+    
+    // Load theme
+    const savedTheme = localStorage.getItem('nexusai_theme') || 'light';
+    setTheme(savedTheme);
+    
+    // Show appropriate screen
+    if (appState.currentUser) {
+        showAppScreen();
+    } else {
+        showAuthScreen();
+    }
+    
+    // Attach event listeners
+    attachEventListeners();
+}
+
+// ==================== THEME ====================
+function setTheme(theme) {
+    document.body.className = theme === 'dark' ? 'dark-mode' : 'light-mode';
+    localStorage.setItem('nexusai_theme', theme);
+}
+
+// ==================== AUTH ====================
+function hashPassword(password) {
+    return btoa(password);
+}
+
+function showAuthScreen() {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('appScreen').style.display = 'none';
+}
+
+function showAppScreen() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'flex';
+}
+
+// ==================== EVENT LISTENERS ====================
+function attachEventListeners() {
+    // Auth Tabs
+    document.querySelectorAll('.authTab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+            
+            // Update tab styles
+            document.querySelectorAll('.authTab').forEach(t => {
+                t.style.background = 'transparent';
+                t.style.opacity = '0.6';
+            });
+            this.style.background = 'white';
+            this.style.opacity = '1';
+            
+            // Update forms
+            document.querySelectorAll('.authForm').forEach(f => f.style.display = 'none');
+            if (tabName === 'login') {
+                document.getElementById('loginForm').style.display = 'block';
+            } else {
+                document.getElementById('signupForm').style.display = 'block';
+            }
+        });
+    });
+    
+    // Login Form
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        
+        const user = appState.users.find(u => u.email === email && u.password === hashPassword(password));
+        if (user) {
+            appState.currentUser = user;
+            localStorage.setItem('nexusai_current_user', JSON.stringify(user));
+            showAppScreen();
+            document.getElementById('messageInput').focus();
+        } else {
+            alert('Invalid email or password');
+        }
+    });
+    
+    // Signup Form
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('signupName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        const confirm = document.getElementById('signupConfirm').value;
+        
+        if (!name || !email || !password) {
+            alert('All fields are required');
+            return;
+        }
+        
+        if (password !== confirm) {
+            alert('Passwords do not match');
+            return;
+        }
+        
+        if (appState.users.find(u => u.email === email)) {
+            alert('Email already registered');
+            return;
+        }
+        
+        const newUser = {
+            id: 'user_' + Date.now(),
+            name,
+            email,
+            password: hashPassword(password),
+            createdAt: new Date().toISOString()
+        };
+        
+        appState.users.push(newUser);
+        localStorage.setItem('nexusai_users', JSON.stringify(appState.users));
+        appState.currentUser = newUser;
+        localStorage.setItem('nexusai_current_user', JSON.stringify(newUser));
+        showAppScreen();
+        document.getElementById('messageInput').focus();
+    });
+    
+    // Theme Toggle
+    document.getElementById('themeToggle').addEventListener('click', function() {
+        const currentTheme = document.body.className === 'dark-mode' ? 'light' : 'dark';
+        setTheme(currentTheme);
+        this.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+    });
+    
+    // Settings Button
+    document.getElementById('settingsBtn').addEventListener('click', function() {
+        document.getElementById('settingsModal').style.display = 'flex';
+        document.getElementById('apiKeyInput').value = appState.config.apiKey;
+    });
+    
+    // Close Settings
+    document.getElementById('closeSettingsModal').addEventListener('click', function() {
+        document.getElementById('settingsModal').style.display = 'none';
+    });
+    
+    // Save Settings
+    document.getElementById('saveSettingsBtn').addEventListener('click', function() {
+        const apiKey = document.getElementById('apiKeyInput').value.trim();
+        if (apiKey && apiKey !== '') {
+            localStorage.setItem('groq_api_key', apiKey);
+            appState.config.apiKey = apiKey;
+            alert('API Key saved!');
+            document.getElementById('settingsModal').style.display = 'none';
+        } else {
+            alert('Please enter an API key');
+        }
+    });
+    
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        appState.currentUser = null;
+        localStorage.removeItem('nexusai_current_user');
+        document.getElementById('messagesContainer').innerHTML = '';
+        showAuthScreen();
+    });
+    
+    // Message Form
+    document.getElementById('messageForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+        
+        if (!message) return;
+        
+        // Add user message
+        addMessage(message, 'user');
+        input.value = '';
+        
+        // Get API response
+        try {
+            const apiKey = appState.config.apiKey;
+            
+            if (apiKey === 'YOUR_GROQ_API_KEY_HERE') {
+                addMessage('⚠️ Please add your Groq API key in Settings first. Get a free key at console.groq.com', 'assistant');
+                return;
+            }
+            
+            // Show loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.textAlign = 'center';
+            loadingDiv.innerHTML = '<p style="color: #64748B;">Thinking...</p>';
+            document.getElementById('messagesContainer').appendChild(loadingDiv);
+            document.getElementById('messagesContainer').scrollTop = document.getElementById('messagesContainer').scrollHeight;
+            
+            const response = await fetch(appState.config.api, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: appState.config.model,
+                    messages: [{ role: 'user', content: message }],
+                    max_tokens: 1000,
+                    temperature: 0.7,
+                })
+            });
+            
+            // Remove loading indicator
+            if (loadingDiv.parentElement) {
+                loadingDiv.parentElement.removeChild(loadingDiv);
+            }
+            
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const aiMessage = data.choices[0].message.content;
+            addMessage(aiMessage, 'assistant');
+            
+        } catch (error) {
+            addMessage(`❌ Error: ${error.message}. Please check your API key.`, 'assistant');
+        }
+    });
+}
+
+// ==================== MESSAGES ====================
+function addMessage(content, role) {
+    const container = document.getElementById('messagesContainer');
+    
+    const msgDiv = document.createElement('div');
+    msgDiv.style.display = 'flex';
+    msgDiv.style.justifyContent = role === 'user' ? 'flex-end' : 'flex-start';
+    msgDiv.style.gap = '8px';
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.className += role === 'user' ? ' message-user' : ' message-assistant';
+    bubble.textContent = content;
+    
+    msgDiv.appendChild(bubble);
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
+}
+
+// ==================== START APP ====================
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+});
+</script>
+
+</body>
+</html>

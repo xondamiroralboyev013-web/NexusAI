@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.nexusai.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>NexusAI Mobile Pro</name>
+    <description>
+        Sovereign Intelligence - Global connection with 100+ Languages
+    </description>
+    <author email="info@nexusai.com" href="https://nexusai.com">
+        NexusAI Team
+    </author>
+    <content src="index.html" />
+    
+    <!-- Icons -->
+    <icon src="www/icon-192.png" />
+    
+    <!-- Preferences -->
+    <preference name="Orientation" value="portrait" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="StatusBarOverlaysWebView" value="false" />
+    <preference name="StatusBarBackgroundColor" value="#10B981" />
+    <preference name="StatusBarStyle" value="lightcontent" />
+    
+    <!-- Android specific -->
+    <platform name="android">
+        <preference name="AndroidXEnabled" value="true" />
+        <allow-intent href="market:*" />
+        <icon density="mdpi" src="www/icon-192.png" />
+        <icon density="hdpi" src="www/icon-192.png" />
+        <icon density="xhdpi" src="www/icon-512.png" />
+        <icon density="xxhdpi" src="www/icon-512.png" />
+        <icon density="xxxhdpi" src="www/icon-512.png" />
+    </platform>
+    
+    <!-- Network Access -->
+    <allow-navigation href="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    
+    <!-- CSP -->
+    <access origin="*" />
+</widget>

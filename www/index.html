@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Важно: viewport-fit=cover для iPhone и запрет масштабирования -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NexusAI Mobile Pro</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#10B981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NexusAI">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bg: 'var(--bg-color)',
+                        surface: 'var(--surface-color)',
+                        surfaceHover: 'var(--surface-hover)',
+                        border: 'var(--border-color)',
+                        textMain: 'var(--text-main)',
+                        textMuted: 'var(--text-muted)',
+                        accent: '#10B981', 
+                        accentDark: '#059669',
+                        accentLight: 'rgba(16, 185, 129, 0.15)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter Tight', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Libraries (Optimized for fast loading) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css" media="print" onload="this.media='all'">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js" defer></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --surface-color: #F8FAFC;
+            --surface-hover: #F1F5F9;
+            --border-color: #E2E8F0;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+        }
+
+        .dark {
+            --bg-color: #09090b; /* Deep black/gray for OLED screens */
+            --surface-color: #18181b;
+            --surface-hover: #27272a;
+            --border-color: #27272a;
+            --text-main: #FAFAFA;
+            --text-muted: #A1A1AA;
+        }
+
+        /* Mobile Optimization Basics */
+        html, body { height: 100dvh; /* Dynamic Viewport Height for mobile browsers */ overflow: hidden; background-color: var(--bg-color); -webkit-tap-highlight-color: transparent; }
+        body { -webkit-font-smoothing: antialiased; }
+
+        /* Typography "ChatGPT Style" - Readable & Airy */
+        .prose { font-size: 16px; line-height: 1.75; color: var(--text-main); max-width: 680px; } /* 1.75 leading is key for readability */
+        .prose p { margin-bottom: 1.25em; } /* Space between paragraphs */
+        .prose h1, .prose h2, .prose h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700; color: var(--text-main); margin-top: 1.5em; margin-bottom: 0.75em; letter-spacing: -0.01em; line-height: 1.3; }
+        .prose ul, .prose ol { padding-left: 1.2em; margin-bottom: 1.25em; }
+        .prose li { margin-bottom: 0.5em; }
+        .prose strong { font-weight: 600; color: var(--text-main); }
+        .prose a { color: #10B981; text-decoration: none; border-bottom: 1px solid rgba(16, 185, 129, 0.3); }
+
+        /* Code Blocks - Mobile Friendly */
+        .artifact-container { margin: 1.5rem 0; border-radius: 12px; overflow: hidden; background: #FFFFFF; border: 1px solid var(--border-color); font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+        .dark .artifact-container { background: #111; border-color: #333; }
+        .artifact-header { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--surface-color); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; font-weight: 600; }
+        .prose pre { margin: 0 !important; padding: 16px !important; background: transparent !important; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        
+        /* Input Area - Glassmorphism */
+        .input-capsule {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 26px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .dark .input-capsule {
+            background: rgba(24, 24, 27, 0.85);
+            border-color: rgba(255,255,255,0.08);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        .input-capsule:focus-within { border-color: var(--accent); transform: translateY(-1px); }
+
+        /* Tools & Cards */
+        .tool-container { border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); margin: 1.5rem 0; background: var(--surface-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .tool-header { padding: 12px 16px; background: var(--surface-hover); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; }
+        .map-frame { width: 100%; height: 300px; border: none; } /* Slightly shorter for mobile */
+
+        /* Mode Switcher */
+        .mode-switch { background: var(--surface-color); border: 1px solid var(--border-color); padding: 4px; border-radius: 99px; display: flex; position: relative; height: 40px; }
+        .mode-btn { padding: 0 16px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--text-muted); position: relative; z-index: 2; flex: 1; text-align: center; }
+        .mode-btn.active { color: var(--bg-color); }
+        .mode-highlight { position: absolute; top: 4px; bottom: 4px; border-radius: 18px; background: var(--text-main); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 1; }
+
+        /* Animations */
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-msg { animation: slideUp 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
+        
+        .backdrop-glass { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .spinner { width: 20px; height: 20px; border: 2px solid var(--surface-hover); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 0px; background: transparent; } /* Hidden scrollbar for cleaner mobile look */
+
+        /* Skeleton Loaders - Modern Loading Animation */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        .skeleton-loader {
+            background: linear-gradient(90deg, var(--surface-color) 25%, var(--surface-hover) 50%, var(--surface-color) 75%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
+            border-radius: 8px;
+        }
+        
+        .skeleton-text { height: 16px; margin-bottom: 8px; }
+        .skeleton-title { height: 24px; margin-bottom: 12px; }
+        .skeleton-avatar { width: 40px; height: 40px; border-radius: 50%; }
+        
+        /* Loading message animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            animation: pulse 1.4s infinite;
+        }
+        
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        /* Smooth message transitions */
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .message-user {
+            animation: slideInRight 0.3s ease-out;
+        }
+        
+        .message-ai {
+            animation: slideInLeft 0.3s ease-out;
+        }
+        
+        /* Smooth transitions for all elements */
+        * {
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .pb-safe { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+        .pt-safe { padding-top: max(20px, env(safe-area-inset-top)); }
+    </style>
+</head>
+<body class="flex flex-col h-full text-textMain">
+
+    <!-- HEADER (Mobile Optimized) -->
+    <header class="absolute top-0 left-0 right-0 h-16 pt-safe flex items-center justify-between px-4 z-50 pointer-events-none">
+            <div class="pointer-events-auto flex items-center gap-2 cursor-pointer active:scale-95 transition-transform" onclick="resetApp()">
+            <div class="w-8 h-8 rounded-xl bg-surface border border-border flex items-center justify-center text-accent shadow-sm">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+            </div>
+            <span id="appBrand" class="font-sans font-bold text-lg tracking-tight text-textMain">NexusAI</span>
+        </div>
+
+        <div class="pointer-events-auto flex items-center gap-2">
+            <!-- Mode Switcher Compact -->
+            <div class="mode-switch w-32 mr-1">
+                <div class="mode-highlight" id="modeHighlight" style="left: 4px; width: 50%;"></div>
+                <button onclick="setMode('free')" class="mode-btn active" id="btnFree">Free</button>
+                <button onclick="setMode('pro')" class="mode-btn" id="btnPro">Pro</button>
+            </div>
+
+            <button onclick="toggleSettingsModal()" class="w-10 h-10 rounded-full bg-surface/80 backdrop-blur border border-border flex items-center justify-center text-textMuted hover:text-textMain active:scale-95 transition-all shadow-sm">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- SETTINGS / MENU MODAL -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-[100] flex items-end sm:items-center justify-center pointer-events-none">
+        <div class="absolute inset-0 backdrop-glass opacity-0 transition-opacity duration-300 pointer-events-auto" onclick="toggleSettingsModal()" id="modalBackdrop"></div>
+        <div class="bg-bg w-full sm:w-[380px] sm:rounded-3xl rounded-t-3xl shadow-2xl p-6 flex flex-col gap-6 transform translate-y-full sm:translate-y-10 sm:scale-95 transition-all duration-300 pointer-events-auto pb-safe" id="settingsContent">
+            
+            <div class="w-12 h-1.5 bg-border rounded-full mx-auto mb-2 sm:hidden"></div> <!-- Drag handle -->
+            
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-xl" id="lbl_settings_title">Menu</h3>
+                <button onclick="toggleTheme()" class="p-2 rounded-full bg-surface border border-border text-textMain"><i id="themeIcon" data-lucide="moon" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="openLanguageModal()" class="w-full flex items-center justify-between p-4 rounded-2xl bg-surface border border-border active:bg-surfaceHover transition-colors">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="languages" class="w-5 h-5 text-accent"></i>
+                        <div class="flex flex-col items-start">
+                            <span class="text-xs font-bold text-textMuted uppercase tracking-wider" id="lbl_settings_lang">Language</span>
+                            <span id="currentLangDisplay" class="font-medium text-lg">English</span>
+                        </div>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-textMuted"></i>
+                </button>
+
+                <div class="grid grid-cols-2 gap-3">
+                     <button onclick="toggleHistoryModal(); toggleSettingsModal()" class="p-4 rounded-2xl bg-surface border border-border flex flex-col items-center gap-2 active:bg-surfaceHover transition-colors">
+                        <i data-lucide="history" class="w-6 h-6 text-textMuted"></i>
+                        <span class="text-sm font-medium" id="lbl_history_btn">History</span>
+                    </button>
+                    <button onclick="clearCurrentChat(); toggleSettingsModal()" class="p-4 rounded-2xl bg-surface border border-border flex flex-col items-center gap-2 active:bg-surfaceHover transition-colors">
+                        <i data-lucide="square-pen" class="w-6 h-6 text-textMuted"></i>
+                        <span class="text-sm font-medium">New Chat</span>
+                    </button>
+                </div>
+                
+                <button onclick="installPWA()" id="installBtn" class="hidden w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-accent text-white font-bold active:opacity-90 transition-opacity">
+                    <i data-lucide="download" class="w-5 h-5"></i>
+                    <span id="lbl_install">O'rnatish</span>
+                </button>
+                
+                <button onclick="requestNotificationPermission()" id="notifBtn" class="hidden w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-surface border border-border active:bg-surfaceHover transition-colors">
+                    <i data-lucide="bell" class="w-5 h-5 text-accent"></i>
+                    <span id="lbl_notif">Bildirishnomalarni Yoqish</span>
+                </button>
+
+                <!-- ADVANCED FEATURES -->
+                <div class="space-y-2 border-t border-border pt-4">
+                    <h4 class="text-xs font-bold text-textMuted uppercase tracking-wider">Advanced Features</h4>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="(() => { const stats = getChatStats(); if(stats) appendMessage('assistant', '📊 Chat Stats:\\n' + JSON.stringify(stats, null, 2), null); })();" class="p-3 rounded-lg bg-surface border border-border text-xs font-medium flex flex-col items-center gap-1 active:bg-surfaceHover">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+                            <span>Stats</span>
+                        </button>
+                        <button onclick="exportChatAsPDF()" class="p-3 rounded-lg bg-surface border border-border text-xs font-medium flex flex-col items-center gap-1 active:bg-surfaceHover">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Export</span>
+                        </button>
+                        <button onclick="backupChats()" class="p-3 rounded-lg bg-surface border border-border text-xs font-medium flex flex-col items-center gap-1 active:bg-surfaceHover">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span>Backup</span>
+                        </button>
+                        <button onclick="shareChat()" class="p-3 rounded-lg bg-surface border border-border text-xs font-medium flex flex-col items-center gap-1 active:bg-surfaceHover">
+                            <i data-lucide="share-2" class="w-4 h-4"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- API TEST BUTTONS -->
+                <div class="space-y-2 border-t border-border pt-4">
+                    <h4 class="text-xs font-bold text-textMuted uppercase tracking-wider">Real-Time Data</h4>
+                    
+                    <button onclick="(async () => { const price = await fetchCryptoPrice('bitcoin'); if(price) appendMessage('assistant', `Bitcoin: $${price.toFixed(2)}`, null); })();" class="w-full p-3 rounded-lg bg-surface border border-border text-sm font-medium active:bg-surfaceHover text-center">₿ Bitcoin Price</button>
+                    
+                    <button onclick="(async () => { const weather = await fetchWeather('London'); if(weather) appendMessage('assistant', `Weather in London: ${weather.condition}, ${weather.temp}`, null); })();" class="w-full p-3 rounded-lg bg-surface border border-border text-sm font-medium active:bg-surfaceHover text-center">🌤️ London Weather</button>
+                    
+                    <button onclick="(async () => { const rate = await fetchCurrencyRate('USD', 'EUR'); if(rate) appendMessage('assistant', `1 USD = ${rate.toFixed(4)} EUR`, null); })();" class="w-full p-3 rounded-lg bg-surface border border-border text-sm font-medium active:bg-surfaceHover text-center">💱 USD/EUR Rate</button>
+                </div>
+
+                <!-- DANGER ZONE -->
+                <button onclick="clearAllData()" class="w-full p-4 rounded-2xl bg-red-500/10 border border-red-500 text-red-500 font-bold text-sm active:opacity-75 transition-opacity">
+                    <i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i> Delete All Data
+                </button>
+            </div>
+            
+            <button onclick="toggleSettingsModal()" class="w-full py-4 rounded-2xl bg-textMain text-bg font-bold text-base active:opacity-90 transition-opacity" id="btn_done">Close</button>
+        </div>
+    </div>
+
+    <!-- MAIN CHAT AREA -->
+    <main class="flex-1 overflow-y-auto custom-scroll relative scroll-smooth w-full" id="mainScroll">
+        <!-- Welcome Screen -->
+        <div id="welcomeState" class="absolute inset-0 flex flex-col items-center justify-center px-6 pointer-events-none pb-20">
+            <div class="pointer-events-auto text-center space-y-6 max-w-md animate-fade-in">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-surface border border-border text-accent shadow-lg shadow-emerald-500/10 mb-2">
+                    <i data-lucide="sparkles" class="w-10 h-10"></i>
+                </div>
+                <div>
+                    <h1 class="font-sans text-4xl font-bold text-textMain mb-3 tracking-tight leading-tight" id="lbl_welcome_title">NexusAI</h1>
+                    <p class="text-textMuted text-lg font-light leading-relaxed" id="lbl_welcome_subtitle">
+                        Global connection. 100+ Languages.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="messagesContainer" class="max-w-3xl mx-auto flex flex-col gap-6 px-4 pt-24 pb-48 opacity-0 transition-opacity duration-300">
+            <!-- Messages injected here -->
+        </div>
+    </main>
+
+    <!-- INPUT AREA (Fixed Bottom) -->
+    <div class="absolute bottom-0 left-0 right-0 z-40 flex justify-center bg-gradient-to-t from-bg via-bg/95 to-transparent pt-10 pb-safe px-4 pointer-events-none">
+        <div class="w-full max-w-3xl pointer-events-auto relative">
+            <div class="input-capsule flex flex-col relative overflow-hidden group">
+                <textarea id="mainInput" rows="1" class="w-full bg-transparent text-[17px] px-5 py-4 resize-none max-h-[160px] placeholder:text-textMuted text-textMain focus:outline-none font-sans leading-relaxed" placeholder="Ask anything..."></textarea>
+                <div class="flex items-center justify-between px-3 pb-3 pt-0">
+                <div class="flex items-center gap-1">
+                        <input type="file" id="imageUpload" accept="image/*" capture="environment" class="hidden">
+                        <button onclick="openCamera()" class="w-10 h-10 rounded-full flex items-center justify-center text-textMuted hover:text-accent hover:bg-surface transition-colors active:scale-90"><i data-lucide="camera" class="w-5 h-5"></i></button>
+                        <button id="micButton" onclick="toggleSpeechInput()" class="w-10 h-10 rounded-full flex items-center justify-center text-textMuted hover:text-accent hover:bg-surface transition-colors active:scale-90"><i data-lucide="mic" class="w-5 h-5"></i></button>
+                    </div>
+                    <button onclick="sendMessage()" id="sendBtn" disabled class="w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transform active:scale-90 transition-all">
+                        <i data-lucide="arrow-up" class="w-5 h-5 stroke-[3]"></i>
+                    </button>
+                </div>
+            </div>
+            <p class="text-center text-[10px] text-textMuted mt-3 font-medium tracking-widest uppercase opacity-50">NexusAI v2025</p>
+        </div>
+    </div>
+
+    <!-- LANGUAGE MODAL -->
+    <div id="langModal" class="fixed inset-0 z-[110] hidden flex flex-col bg-bg sm:bg-transparent">
+        <div class="sm:absolute sm:inset-0 sm:backdrop-glass" onclick="closeLanguageModal()"></div>
+        <div class="flex-1 flex flex-col bg-bg sm:w-[400px] sm:h-[80vh] sm:m-auto sm:rounded-3xl sm:shadow-2xl sm:border sm:border-border relative z-10 overflow-hidden animate-msg">
+            <div class="px-5 py-4 border-b border-border flex items-center gap-3 bg-surface/50 pt-safe sm:pt-4">
+                <button onclick="closeLanguageModal()" class="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center active:scale-95 transition-transform"><i data-lucide="arrow-left" class="w-5 h-5 text-textMain"></i></button>
+                <div class="relative flex-1">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-textMuted"></i>
+                    <input type="text" id="langSearch" oninput="filterLanguages()" placeholder="Search..." 
+                           class="w-full pl-10 pr-4 py-2.5 bg-surface border border-transparent focus:border-accent rounded-xl focus:outline-none text-textMain text-base placeholder:text-textMuted transition-colors">
+                </div>
+            </div>
+            <div id="langList" class="flex-1 overflow-y-auto custom-scroll p-2 space-y-1"></div>
+        </div>
+    </div>
+
+    <!-- HISTORY MODAL -->
+    <div id="historyModal" class="fixed inset-0 z-[110] hidden flex flex-col bg-bg sm:bg-transparent">
+        <div class="sm:absolute sm:inset-0 sm:backdrop-glass" onclick="toggleHistoryModal()"></div>
+        <div class="flex-1 flex flex-col bg-bg sm:w-[400px] sm:h-[80vh] sm:m-auto sm:rounded-3xl sm:shadow-2xl sm:border sm:border-border relative z-10 overflow-hidden animate-msg">
+            <div class="px-5 py-4 border-b border-border flex items-center justify-between bg-surface/50 pt-safe sm:pt-4">
+                <h3 class="font-bold text-xl text-textMain" id="lbl_history_title_modal">History</h3>
+                <button onclick="toggleHistoryModal()" class="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center active:scale-95 transition-transform"><i data-lucide="x" class="w-5 h-5 text-textMain"></i></button>
+            </div>
+            <div id="historyList" class="flex-1 overflow-y-auto custom-scroll p-4 space-y-2">
+                <div class="p-10 text-center text-textMuted text-sm" id="lbl_no_history">No recent conversations.</div>
+            </div>
+            <div class="p-4 border-t border-border bg-surface/30 pb-safe sm:pb-4">
+                <button onclick="deleteAllHistory()" class="w-full flex items-center justify-center gap-2 px-4 py-3.5 text-sm font-bold text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-colors uppercase tracking-wide" id="btn_clear_history"><i data-lucide="trash-2" class="w-4 h-4"></i> Clear History</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            // Groq API Configuration (Free Tier - Very Fast!)
+            // Get your free Groq API key at: https://console.groq.com
+            api: 'https://api.groq.com/openai/v1/chat/completions',
+            apiKey: 'YOUR_GROQ_API_KEY_HERE', // Replace with your Groq API key
+            model: 'llama-3.1-8b-instant', // Ultra-fast, free tier, Llama 3.1
+            pixabayKey: 'REPLACE_PIXABAY_KEY',
+            tavilyKey: 'REPLACE_TAVILY_KEY' // For web search (get key from tavily.com)
+        };
+
+        const ALL_LANGUAGES = [
+            {code:'en',name:'English',native:'English'},{code:'zh',name:'Chinese',native:'中文'},{code:'hi',name:'Hindi',native:'हिन्दी'},{code:'es',name:'Spanish',native:'Español'},{code:'fr',name:'French',native:'Français'},{code:'ar',name:'Arabic',native:'العربية'},{code:'bn',name:'Bengali',native:'বাংলা'},{code:'pt',name:'Portuguese',native:'Português'},{code:'ru',name:'Russian',native:'Русский'},{code:'ur',name:'Urdu',native:'اردو'},
+            {code:'ja',name:'Japanese',native:'日本語'},{code:'de',name:'German',native:'Deutsch'},{code:'pa',name:'Punjabi',native:'ਪੰਜਾਬੀ'},{code:'jv',name:'Javanese',native:'Basa Jawa'},{code:'ko',name:'Korean',native:'한국어'},{code:'vi',name:'Vietnamese',native:'Tiếng Việt'},{code:'te',name:'Telugu',native:'తెలుగు'},{code:'mr',name:'Marathi',native:'मराठी'},{code:'ta',name:'Tamil',native:'தமிழ்'},{code:'tr',name:'Turkish',native:'Türkçe'},
+            {code:'hy',name:'Armenian',native:'Հայերեն'},{code:'ka',name:'Georgian',native:'ქართული'},{code:'az',name:'Azerbaijani',native:'Azərbaycanca'},{code:'kk',name:'Kazakh',native:'Қазақша'},{code:'uz',name:'Uzbek',native:'Oʻzbekcha'},{code:'uk',name:'Ukrainian',native:'Українська'},{code:'ky',name:'Kyrgyz',native:'Кыргызча'},{code:'tg',name:'Tajik',native:'Тоҷикӣ'},{code:'tk',name:'Turkmen',native:'Türkmençe'},{code:'be',name:'Belarusian',native:'Беларуская'},
+            {code:'it',name:'Italian',native:'Italiano'},{code:'pl',name:'Polish',native:'Polski'},{code:'nl',name:'Dutch',native:'Nederlands'},{code:'sv',name:'Swedish',native:'Svenska'},{code:'no',name:'Norwegian',native:'Norsk'},{code:'da',name:'Danish',native:'Dansk'},{code:'fi',name:'Finnish',native:'Suomi'},{code:'cs',name:'Czech',native:'Čeština'},{code:'hu',name:'Hungarian',native:'Magyar'},{code:'ro',name:'Romanian',native:'Română'},
+            {code:'el',name:'Greek',native:'Ελληνικά'},{code:'he',name:'Hebrew',native:'עברית'},{code:'id',name:'Indonesian',native:'Bahasa Indonesia'},{code:'ms',name:'Malay',native:'Bahasa Melayu'},{code:'th',name:'Thai',native:'ไทย'},{code:'tl',name:'Filipino',native:'Filipino'},{code:'my',name:'Burmese',native:'မြန်မာဘာသာ'},{code:'km',name:'Khmer',native:'ភាសាខ្មែរ'},{code:'lo',name:'Lao',native:'ພາສາລາວ'},{code:'am',name:'Amharic',native:'አማርኛ'},
+            {code:'ne',name:'Nepali',native:'नेपाली'},{code:'si',name:'Sinhala',native:'සිංහල'},{code:'mn',name:'Mongolian',native:'Монгол'},{code:'sw',name:'Swahili',native:'Kiswahili'},{code:'yo',name:'Yoruba',native:'Ede Yorùbá'},{code:'ig',name:'Igbo',native:'Asụsụ Igbo'},{code:'ha',name:'Hausa',native:'Harshen Hausa'},{code:'zu',name:'Zulu',native:'isiZulu'},{code:'af',name:'Afrikaans',native:'Afrikaans'},{code:'sq',name:'Albanian',native:'Shqip'},
+            {code:'eu',name:'Basque',native:'Euskara'},{code:'bs',name:'Bosnian',native:'Bosanski'},{code:'ca',name:'Catalan',native:'Català'},{code:'hr',name:'Croatian',native:'Hrvatski'},{code:'et',name:'Estonian',native:'Eesti'},{code:'gl',name:'Galician',native:'Galego'},{code:'is',name:'Icelandic',native:'Íslenska'},{code:'lv',name:'Latvian',native:'Latviešu'},{code:'lt',name:'Lithuanian',native:'Lietuvių'},{code:'mk',name:'Macedonian',native:'Македонски'},
+            {code:'mt',name:'Maltese',native:'Malti'},{code:'sr',name:'Serbian',native:'Српски'},{code:'sk',name:'Slovak',native:'Slovenčina'},{code:'sl',name:'Slovenian',native:'Slovenščina'},{code:'cy',name:'Welsh',native:'Cymraeg'},{code:'yi',name:'Yiddish',native:'ייִדיշ'},{code:'gu',name:'Gujarati',native:'ગુજરાતી'},{code:'kn',name:'Kannada',native:'ಕನ್ನಡ'},{code:'ml',name:'Malayalam',native:'മലയാളം'},{code:'or',name:'Oriya',native:'ଓଡ଼ିଆ'},
+            {code:'sd',name:'Sindhi',native:'سنڌي'},{code:'as',name:'Assamese',native:'অসমীয়া'},{code:'ps',name:'Pashto',native:'پښتو'},{code:'ku',name:'Kurdish',native:'Kurdî'},{code:'so',name:'Somali',native:'Soomaali'},{code:'ti',name:'Tigrinya',native:'ትግርኛ'},{code:'om',name:'Oromo',native:'Oromoo'},{code:'lg',name:'Ganda',native:'Luganda'},{code:'ln',name:'Lingala',native:'Lingála'},{code:'sn',name:'Shona',native:'ChiShona'},
+            {code:'st',name:'Sotho',native:'Sesotho'},{code:'ny',name:'Chichewa',native:'Chichewa'},{code:'mg',name:'Malagasy',native:'Malagasy'},{code:'xh',name:'Xhosa',native:'isiXhosa'},{code:'rw',name:'Kinyarwanda',native:'Ikinyarwanda'},{code:'ak',name:'Akan',native:'Akan'},{code:'ga',name:'Irish',native:'Gaeilge'},{code:'gd',name:'Scots Gaelic',native:'Gàidhlig'},{code:'br',name:'Breton',native:'Brezhoneg'},{code:'co',name:'Corsican',native:'Corsu'},
+            {code:'fy',name:'Frisian',native:'Frysk'},{code:'lb',name:'Luxembourgish',native:'Lëtzebuergesch'},{code:'rm',name:'Romansh',native:'Rumantsch'},{code:'oc',name:'Occitan',native:'Occitan'},{code:'sm',name:'Samoan',native:'Gagana Samoa'},{code:'mi',name:'Maori',native:'Māori'},{code:'to',name:'Tongan',native:'Faka-Tonga'},{code:'fj',name:'Fijian',native:'Na Vosa Vaka-Viti'},{code:'haw',name:'Hawaiian',native:'ʻŌlelo Hawaiʻi'},{code:'la',name:'Latin',native:'Latina'},{code:'eo',name:'Esperanto',native:'Esperanto'}
+        ];
+
+        const DICTIONARY = {};
+        const c = (code, p, t, s, pr, l, d, h, ch, nh, f, pb, histBtn) => {
+            DICTIONARY[code] = { placeholder: p, welcomeTitle: t, welcomeSub: s, settingsTitle: pr, langLabel: l, done: d, historyTitle: h, clearHistory: ch, noHistory: nh, free: f, pro: pb, historyBtn: histBtn || h };
+        };
+
+    c('en','Ask anything...','NexusAI','Global connection. 100+ Languages.','Menu','Language','Close','History','Clear History','No recent chats.','Free','Pro','History');
+        c('zh','随便问...','主权智能','全球连接。100多种语言。','菜单','语言','关闭','历史','清除历史','没有对话。','免费','专业','历史');
+        c('ru','Спросите что угодно...','Суверенный Интеллект','Глобальное подключение. 100+ языков.','Меню','Язык','Закрыть','История','Очистить','Нет диалогов.','Беспл.','Про','История');
+        c('es','Pregunta lo que sea...','Inteligencia Soberana','Conexión global. +100 idiomas.','Menú','Idioma','Cerrar','Historial','Borrar','Sin conversaciones.','Gratis','Pro','Historial');
+        c('hi','कुछ भी पूछें...','संप्रभु बुद्धि','वैश्विक कनेक्शन। 100+ भाषाएँ।','मेन्यू','भाषा','बंद करें','इतिहास','साफ़ करें','कोई बातचीत नहीं।','मुफ्त','प्रो','इतिहास');
+        
+        // Auto-fill defaults for the rest to avoid undefined errors if user uses other langs
+        ALL_LANGUAGES.forEach(l => {
+            if(!DICTIONARY[l.code]) DICTIONARY[l.code] = DICTIONARY.en;
+        });
+
+        DICTIONARY.default = DICTIONARY.en;
+
+        let state = {
+            lang: localStorage.getItem('nexus_lang') || 'en',
+            chats: JSON.parse(localStorage.getItem('nexus_chats') || '[]'),
+            currentChatId: null,
+            theme: localStorage.getItem('nexus_theme') || 'light',
+            mode: 'free'
+        };
+
+        let recognition = null;
+        let deferredPrompt = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Fast initialization with optimized loading
+            requestAnimationFrame(() => {
+                try {
+                    lucide.createIcons();
+                    initMarkdown();
+                    initSpeech();
+                    initTheme();
+                    setMode('free');
+                } catch (e) {
+                    console.error('UI initialization error:', e);
+                }
+            });
+            
+            const input = document.getElementById('mainInput');
+            if (input) {
+                input.addEventListener('input', function() { 
+                    this.style.height = 'auto'; 
+                    this.style.height = Math.min(this.scrollHeight, 160) + 'px'; 
+                    toggleSendButton(); 
+                });
+                input.addEventListener('keydown', (e) => { 
+                    if(e.key === 'Enter' && !e.shiftKey) { 
+                        e.preventDefault(); 
+                        const sendBtn = document.getElementById('sendBtn');
+                        if (sendBtn && !sendBtn.disabled) sendMessage(); 
+                    } 
+                });
+            }
+
+            // Deferred non-critical tasks
+            setTimeout(() => {
+                applyLanguage(state.lang);
+                registerServiceWorker();
+                setupPWAInstall();
+                checkNotificationPermission();
+                setupImageUpload();
+            }, 100);
+        });
+
+        function initTheme() {
+            if (state.theme === 'dark') { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); }
+            updateThemeIcon();
+        }
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) { document.documentElement.classList.remove('dark'); state.theme = 'light'; } else { document.documentElement.classList.add('dark'); state.theme = 'dark'; }
+            localStorage.setItem('nexus_theme', state.theme);
+            updateThemeIcon();
+        }
+        function updateThemeIcon() {
+            const icon = document.getElementById('themeIcon');
+            if(state.theme === 'dark') { icon.setAttribute('data-lucide', 'sun'); } else { icon.setAttribute('data-lucide', 'moon'); }
+            lucide.createIcons();
+        }
+
+        function setMode(mode) {
+            state.mode = mode;
+            const highlight = document.getElementById('modeHighlight');
+            const btnFree = document.getElementById('btnFree');
+            const btnPro = document.getElementById('btnPro');
+            
+            if (mode === 'free') {
+                highlight.style.left = '4px'; highlight.style.width = '50%';
+                btnFree.classList.add('active'); btnPro.classList.remove('active');
+            } else {
+                highlight.style.left = 'calc(50% - 4px)'; highlight.style.width = '50%';
+                btnFree.classList.remove('active'); btnPro.classList.add('active');
+            }
+        }
+
+        function initMarkdown() {
+            marked.setOptions({ breaks: true, highlight: function(code, lang) { const language = hljs.getLanguage(lang) ? lang : 'plaintext'; return hljs.highlight(code, { language }).value; }});
+            const renderer = new marked.Renderer();
+            renderer.code = function(code, language) {
+                const lang = (language || 'plaintext').toLowerCase();
+                let highlightedCode = code;
+                try { highlightedCode = hljs.highlight(code, { language: lang }).value; } catch (e) { highlightedCode = hljs.highlightAuto(code).value; }
+                return `<div class="artifact-container"><div class="artifact-header"><span>${lang}</span></div><pre><code class="hljs language-${lang}">${highlightedCode}</code></pre></div>`;
+            };
+            marked.use({ renderer });
+        }
+
+        async function sendMessage() {
+            const inputEl = document.getElementById('mainInput');
+            const text = inputEl.value.trim();
+            if(!text) return;
+            inputEl.value = ''; inputEl.style.height = 'auto'; toggleSendButton();
+            document.getElementById('welcomeState').style.display = 'none';
+            const container = document.getElementById('messagesContainer');
+            container.classList.remove('hidden', 'opacity-0');
+            
+            appendMessage('user', text, null);
+            saveToHistory('user', text, null);
+            const loaderId = appendSkeleton();
+
+            try {
+                // FORCE LANGUAGE RULE
+                const commonRules = `CRITICAL: You MUST reply in the EXACT SAME LANGUAGE as the user's message. If User=Russian -> You=Russian. If User=English -> You=English. Ignore interface settings.`;
+
+                let systemPrompt = "";
+                if (state.mode === 'free') {
+                    systemPrompt = `You are Nexus, a hybrid AI combining ChatGPT's creativity with Perplexity's research accuracy.
+
+                                    ROLE:
+                                    - Be conversational, friendly, and helpful.
+                                    - Explain clearly and simply, always grounded in facts.
+                                    - Use web search for factual questions to provide current, accurate information.
+                                    - Keep answers concise but informative.
+
+                                    FORMATTING:
+                                    - Use short paragraphs.
+                                    - Use bullet points when helpful.
+                                    - Optimize for mobile readability.
+                                    - Use clean Markdown.
+
+                                    HYBRID INTELLIGENCE (NEXUS MODE):
+
+                                    RESEARCH MODE - When facts, current events, or real-world information is needed:
+                                    - Output [SEARCH: specific query] on its own line FIRST.
+                                    - After search results, provide answer with inline citations.
+                                    - Always include sources so user can verify information.
+
+                                    CREATOR MODE - When writing code, creative content, or analysis:
+                                    - Use proper Markdown code blocks with language specification.
+                                    - Make code readable and well-commented.
+                                    - Provide clear explanations alongside code.
+
+                                    VISUAL MODE - When user asks "show", "photo", "image", or visual reference:
+                                    - Output [IMG: specific visual search query] on its own line.
+                                    - For locations: Output [MAP: exact place name].
+                                    - Display images and maps inline with explanation.
+
+                                    CONTEXT AWARENESS (MANDATORY):
+                                    - If user says "this", "that place", "it" - reuse most recent context.
+                                    - Remember business/location names across conversation.
+
+                                    CRITICAL RULES:
+                                    - Tool commands on separate lines, NEVER mixed with text.
+                                    - Tools come FIRST, explanation after.
+                                    - For factual queries without clear answer: ALWAYS use [SEARCH: ...].
+                                    - For code/creative: NO search needed.
+                                    - For locations/visuals: Use [MAP: ...] and [IMG: ...].
+
+                                    Language of response = language of the user.`;
+                } else {
+                    systemPrompt = `You are Nexus Pro, an advanced hybrid AI system merging ChatGPT's depth with Perplexity's research precision.
+
+                                ROLE:
+                                - Be professional, precise, and authoritative.
+                                - Deliver structured, high-quality answers backed by research.
+                                - Use web search proactively for any factual claim.
+                                - Think step-by-step, show only the final polished result.
+
+                                FORMATTING:
+                                - Always use clear headings and sections.
+                                - Use bullet points, tables, and structured lists.
+                                - Maintain premium, professional tone.
+                                - Proper Markdown for code, quotes, and emphasis.
+
+                                HYBRID INTELLIGENCE (NEXUS PRO MODE):
+
+                                RESEARCH MODE (PRIMARY):
+                                - For ANY factual question, statistic, event, or real-world query:
+                                  * Output [SEARCH: detailed, specific query] on its own line FIRST.
+                                  * Analyze search results critically.
+                                  * Provide answer with inline citations [[SOURCE: title | url]].
+                                  * Always verify and cite sources for credibility.
+
+                                CREATOR MODE (SECONDARY):
+                                - For code, technical architecture, business strategy, creative writing:
+                                  * Use structured code blocks with proper syntax highlighting.
+                                  * Provide architectural diagrams in ASCII if helpful.
+                                  * Deep explanations of logic and best practices.
+                                  * No search needed - leverage deep knowledge.
+
+                                VISUAL MODE (TERTIARY):
+                                - When visual reference improves understanding:
+                                  * Output [IMG: detailed search query] for concept visuals.
+                                  * Output [MAP: exact location] for geographic queries.
+                                  * Use images to enhance explanations, not replace them.
+
+                                CONTEXT & MEMORY:
+                                - Track business names, locations, preferences across conversation.
+                                - Reuse exact names when user references "that", "this place", "it".
+                                - Build understanding incrementally.
+
+                                STRICT RULES FOR PRO MODE:
+                                - ALWAYS search for factual content (no exceptions).
+                                - Tool commands isolated on own lines.
+                                - Research output BEFORE explanatory text.
+                                - Citations required for credibility.
+                                - For multi-part questions: use search for each factual component.
+                                - For creative/code: leverage knowledge base directly.
+                                - Professional language always; explain assumptions.
+
+                                Language of response = language of the user.`;
+                }
+
+                const messages = [
+                    { role: "system", content: systemPrompt },
+                    ...(state.currentChatId ? state.chats.find(c => c.id === state.currentChatId)?.messages.map(m => ({role: m.role, content: m.text})) || [] : []),
+                    { role: "user", content: text }
+                ];
+
+                // Define tools for Nexus hybrid system
+                const tools = [
+                    {
+                        name: "web_search",
+                        description: "Search the web for current information, facts, events, and real-world data",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                query: { type: "string", description: "Search query to find relevant information" }
+                            },
+                            required: ["query"]
+                        }
+                    },
+                    {
+                        name: "image_search",
+                        description: "Search for images related to a topic or query",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                query: { type: "string", description: "Image search query" }
+                            },
+                            required: ["query"]
+                        }
+                    }
+                ];
+
+                const requestBody = {
+                    messages: messages,
+                    model: CONFIG.model,
+                    tools: tools,
+                    tool_choice: "auto"
+                };
+
+                const response = await fetch(CONFIG.api, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.apiKey}`, 'HTTP-Referer': window.location.href, 'X-Title': 'NexusAI Sovereign' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if(!response.ok) throw new Error(`API Error: ${response.status}`);
+                const data = await response.json();
+                let aiText = data.choices?.[0]?.message?.content || "Connection interruption.";
+                removeSkeleton(loaderId);
+                
+                // Parsing
+                let cleanText = aiText;
+                let metadata = { sources: [], images: [], map: null, nasa: null };
+                
+                // Extractors (Simplified for brevity)
+                const extract = (regex, type) => {
+                    let match;
+                    while ((match = regex.exec(aiText)) !== null) {
+                        if(type==='map') metadata.map = match[1];
+                        if(type==='nasa') metadata.nasa = match[1];
+                        if(type==='source') metadata.sources.push({title: match[1], url: match[2]});
+                        if(type==='img') metadata.images.push(match[1]); // Placeholder logic
+                        if(type==='search') metadata.searchQuery = match[1];
+                        cleanText = cleanText.replace(match[0], '');
+                    }
+                };
+
+                // Extract search queries (Nexus hybrid mode)
+                extract(/\[SEARCH:\s*(.*?)\s*\]/g, 'search');
+                
+                // Perform web search if [SEARCH: ...] was found
+                if (metadata.searchQuery) {
+                    try {
+                        const searchResults = await fetchWebSearch(metadata.searchQuery);
+                        if (searchResults && searchResults.length > 0) {
+                            metadata.sources = searchResults.map(r => ({
+                                title: r.title,
+                                url: r.url,
+                                snippet: r.snippet
+                            }));
+                        }
+                    } catch (e) { console.error('Search failed:', e); }
+                }
+
+                extract(/\[MAP:\s*(.*?)\s*\]/g, 'map');
+                extract(/\[NASA:\s*(.*?)\s*\]/g, 'nasa');
+                extract(/\[\[SOURCE:\s*(.*?)\s*\|\s*(.*?)\]\]/g, 'source');
+                
+                // Image Fetching Logic
+                const imgMultiRegex = /\[GEN_IMG:\s*(.*?)\s*\]/g;
+                const imgSingleRegex = /\[IMG:\s*(.*?)\s*\]/g;
+                let imgQuery = null; let isMulti = false;
+                let iMatch;
+                if ((iMatch = imgMultiRegex.exec(aiText)) !== null) { imgQuery = iMatch[1]; isMulti = true; cleanText = cleanText.replace(iMatch[0], ''); }
+                else if ((iMatch = imgSingleRegex.exec(aiText)) !== null) { imgQuery = iMatch[1]; isMulti = false; cleanText = cleanText.replace(iMatch[0], ''); }
+
+                if (imgQuery) {
+                    try { metadata.images = await fetchPixabayImages(imgQuery, isMulti ? 4 : 1); } catch (e) {}
+                }
+
+                if (state.mode === 'pro' && metadata.sources.length === 0) {
+                   // Add dummy sources for visual consistency in Pro mode if none
+                   metadata.sources.push({title: "Knowledge Base", url: "#"});
+                }
+
+                appendMessage('assistant', cleanText.trim(), metadata);
+                saveToHistory('assistant', cleanText.trim(), metadata);
+
+            } catch (err) { removeSkeleton(loaderId); appendMessage('error', "Connection interruption."); }
+        }
+
+        async function fetchWebSearch(query) {
+            try {
+                // Using Tavily API for web search
+                // Get your key from: https://tavily.com (free tier available)
+                const tavilyKey = CONFIG.tavilyKey;
+                
+                // If key not set, return empty results (graceful fallback)
+                if (tavilyKey === 'REPLACE_TAVILY_KEY') {
+                    console.warn('Tavily API key not configured for web search');
+                    return [];
+                }
+
+                const url = `https://api.tavily.com/search`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        api_key: tavilyKey,
+                        query: query,
+                        max_results: 5,
+                        include_answer: true
+                    })
+                });
+
+                if (!response.ok) return [];
+                const data = await response.json();
+                
+                // Transform Tavily results to our format
+                return data.results ? data.results.map(r => ({
+                    title: r.title,
+                    url: r.url,
+                    snippet: r.content || r.snippet
+                })) : [];
+            } catch (e) {
+                console.error('Web search failed:', e);
+                return [];
+            }
+        }
+
+        async function fetchPixabayImages(query, count) {
+            try {
+                if (!CONFIG.pixabayKey || CONFIG.pixabayKey === 'YOUR_PIXABAY_KEY') {
+                    console.warn('Pixabay API key not configured');
+                    return [];
+                }
+                
+                const url = `https://pixabay.com/api/?key=${CONFIG.pixabayKey}&q=${encodeURIComponent(query)}&image_type=photo&safesearch=true&per_page=${count}&timeout=5000`;
+                
+                // Timeout protection
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const res = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (!res.ok) {
+                    console.error(`Pixabay API error: ${res.status} ${res.statusText}`);
+                    return [];
+                }
+                
+                const data = await res.json();
+                if (data.hits && data.hits.length > 0) {
+                    return data.hits.slice(0, count).map(h => h.webformatURL || h.pageURL);
+                }
+                return [];
+            } catch (error) {
+                console.error('Pixabay image fetch failed:', error.message);
+                return [];
+            }
+        }
+
+        function appendMessage(role, text, metadata = null) {
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+            
+            if (role === 'user') {
+                div.className = `w-full flex justify-end message-user`;
+                div.innerHTML = `<div class="max-w-[90%] bg-surfaceHover border border-border text-textMain px-4 py-3 rounded-2xl rounded-tr-sm text-[16px] leading-relaxed whitespace-pre-wrap shadow-sm">${text}</div>`;
+            } else if (role === 'error') {
+                div.className = "w-full flex justify-center py-4 message-ai";
+                div.innerHTML = `<span class="text-red-500 text-xs font-bold bg-red-500/10 px-3 py-1 rounded-full">⚠️ ${text}</span>`;
+            } else {
+                const uniqueId = 'msg-' + Date.now();
+                div.className = `w-full flex flex-col gap-2 message-ai`;
+                
+                let extras = '';
+                // Enhanced Sources display with web icons
+                if (metadata?.sources?.length > 0) {
+                    extras += `<div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 mb-1">
+                        ${metadata.sources.map(s => {
+                            let icon = 'globe';
+                            if (s.url.includes('wikipedia')) icon = 'book-open';
+                            else if (s.url.includes('github')) icon = 'code';
+                            else if (s.url.includes('reddit')) icon = 'message-circle';
+                            else if (s.url.includes('youtube') || s.url.includes('video')) icon = 'video';
+                            else if (s.url.includes('news') || s.url.includes('bbc') || s.url.includes('cnn')) icon = 'newspaper';
+                            
+                            return `<a href="${s.url}" target="_blank" rel="noopener" class="flex-shrink-0 bg-surface border border-border hover:border-accent transition-all px-3 py-2 rounded-lg text-xs flex flex-col gap-1 w-36 group hover:shadow-md">
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="${icon}" class="w-3.5 h-3.5 text-accent group-hover:scale-110 transition-transform"></i>
+                                    <span class="font-semibold truncate text-textMain">${s.title}</span>
+                                </div>
+                                <span class="text-[10px] text-textMuted line-clamp-2">${s.snippet || 'Source'}</span>
+                            </a>`;
+                        }).join('')}
+                    </div>`;
+                }
+                // Images with better loading
+                if (metadata?.images?.length > 0) {
+                    extras += `<div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 my-2">
+                        ${metadata.images.map(img => `<div class="flex-shrink-0 relative group">
+                            <img src="${img}" class="h-32 w-48 object-cover rounded-xl border border-border group-hover:border-accent transition-all bg-surface skeleton-loader" loading="lazy" alt="result">
+                            <div class="absolute inset-0 rounded-xl bg-black/0 group-hover:bg-black/10 transition-all"></div>
+                        </div>`).join('')}
+                    </div>`;
+                }
+                // Maps
+                if (metadata?.map) {
+                     const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(metadata.map)}&output=embed`;
+                     extras += `<div class="tool-container"><iframe class="map-frame" src="${mapUrl}"></iframe></div>`;
+                }
+                 // NASA
+                if (metadata?.nasa) {
+                     extras += `<div class="tool-container bg-black"><iframe class="map-frame" src="https://solarsystem.nasa.gov/gltf_embed/2393"></iframe></div>`;
+                }
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 mb-1 px-1">
+                        <div class="w-6 h-6 rounded-lg bg-surface border border-border flex items-center justify-center text-accent"><i data-lucide="bot" class="w-3.5 h-3.5"></i></div>
+                        <span class="text-xs font-bold text-textMain">NexusAI</span>
+                    </div>
+                    ${extras}
+                    <div class="prose w-full bg-transparent px-1" id="${uniqueId}"></div>
+                `;
+                setTimeout(() => { document.getElementById(uniqueId).innerHTML = marked.parse(text); lucide.createIcons(); }, 0);
+            }
+            container.appendChild(div); 
+            lucide.createIcons(); 
+            scrollToBottom();
+        }
+
+        function appendSkeleton() {
+            const id = 'skel-' + Date.now();
+            const container = document.getElementById('messagesContainer');
+            const div = document.createElement('div');
+            div.id = id; div.className = "w-full flex flex-col gap-2 animate-msg mt-2";
+            div.innerHTML = `<div class="flex items-center gap-2 px-1"><div class="spinner"></div><span class="text-xs font-medium text-textMuted">Thinking...</span></div>`;
+            container.appendChild(div); scrollToBottom(); return id;
+        }
+
+        function removeSkeleton(id) { const el = document.getElementById(id); if(el) el.remove(); }
+        
+        function scrollToBottom() { 
+            const m = document.getElementById('mainScroll'); 
+            requestAnimationFrame(() => { m.scrollTo({ top: m.scrollHeight, behavior: 'smooth' }); });
+        }
+        
+        // Modals
+        function toggleSettingsModal() { 
+            const m = document.getElementById('settingsModal'); 
+            const c = document.getElementById('settingsContent');
+            const b = document.getElementById('modalBackdrop');
+            if(m.classList.contains('hidden')) {
+                m.classList.remove('hidden');
+                setTimeout(() => { b.classList.remove('opacity-0'); c.classList.remove('translate-y-full', 'scale-95'); }, 10);
+            } else {
+                b.classList.add('opacity-0'); c.classList.add('translate-y-full', 'scale-95');
+                setTimeout(() => m.classList.add('hidden'), 300);
+            }
+        }
+
+        function openLanguageModal() { document.getElementById('langModal').classList.remove('hidden'); renderLanguages(ALL_LANGUAGES); }
+        function closeLanguageModal() { document.getElementById('langModal').classList.add('hidden'); toggleSettingsModal(); }
+        
+        function toggleHistoryModal() {
+            const m = document.getElementById('historyModal');
+            if(m.classList.contains('hidden')) { m.classList.remove('hidden'); loadHistoryList(); }
+            else { m.classList.add('hidden'); }
+        }
+
+        function renderLanguages(list) {
+            const container = document.getElementById('langList');
+            container.innerHTML = list.map(l => `
+                <button onclick="selectLanguage('${l.code}')" class="w-full flex items-center justify-between p-4 border-b border-border/50 active:bg-surfaceHover">
+                    <div class="flex flex-col items-start"><span class="font-medium text-textMain">${l.native}</span><span class="text-xs text-textMuted">${l.name}</span></div>
+                    ${state.lang === l.code ? '<i data-lucide="check" class="w-5 h-5 text-accent"></i>' : ''}
+                </button>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function filterLanguages() {
+            const q = document.getElementById('langSearch').value.toLowerCase();
+            renderLanguages(ALL_LANGUAGES.filter(l => l.name.toLowerCase().includes(q) || l.native.toLowerCase().includes(q)));
+        }
+
+        function selectLanguage(code) {
+            changeLanguage(code); 
+            const l = ALL_LANGUAGES.find(i=>i.code===code);
+            document.getElementById('currentLangDisplay').innerText = l.native;
+            closeLanguageModal();
+        }
+
+        function applyLanguage(lang) {
+            const t = DICTIONARY[lang] || DICTIONARY.en;
+            document.getElementById('mainInput').placeholder = t.placeholder;
+            document.getElementById('lbl_welcome_title').textContent = t.welcomeTitle;
+            document.getElementById('lbl_welcome_subtitle').textContent = t.welcomeSub;
+            document.getElementById('lbl_settings_title').textContent = t.settingsTitle;
+            document.getElementById('lbl_settings_lang').textContent = t.langLabel;
+            document.getElementById('btn_done').textContent = t.done;
+            document.getElementById('lbl_history_title_modal').textContent = t.historyTitle;
+            document.getElementById('lbl_history_btn').textContent = t.historyBtn;
+            document.getElementById('btn_clear_history').textContent = t.clearHistory;
+            document.getElementById('lbl_no_history').textContent = t.noHistory;
+            document.getElementById('btnFree').textContent = t.free;
+            document.getElementById('btnPro').textContent = t.pro;
+        }
+
+        function changeLanguage(val) { state.lang = val; localStorage.setItem('nexus_lang', val); applyLanguage(val); }
+        function toggleSendButton() { const btn = document.getElementById('sendBtn'); btn.disabled = !document.getElementById('mainInput').value.trim(); }
+        
+        function saveToHistory(role, text, metadata) {
+            if (!state.currentChatId) { state.currentChatId = Date.now().toString(); state.chats.unshift({ id: state.currentChatId, title: text.substring(0, 30), messages: [], date: new Date().toISOString() }); }
+            const chat = state.chats.find(c => c.id === state.currentChatId);
+            if (chat) { chat.messages.push({ role, text, metadata }); localStorage.setItem('nexus_chats', JSON.stringify(state.chats)); }
+        }
+
+        function loadHistoryList() {
+            const list = document.getElementById('historyList'); const emptyLabel = document.getElementById('lbl_no_history');
+            list.innerHTML = '';
+            if(state.chats.length === 0) { list.appendChild(emptyLabel); emptyLabel.style.display = 'block'; return; }
+            emptyLabel.style.display = 'none';
+            state.chats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = `p-4 rounded-2xl bg-surface border border-border mb-2 active:scale-95 transition-transform cursor-pointer`;
+                item.onclick = () => loadChat(chat.id);
+                item.innerHTML = `<div class="font-medium text-textMain truncate">${chat.title}</div><div class="text-xs text-textMuted mt-1">${new Date(chat.date).toLocaleDateString()}</div>`;
+                list.appendChild(item);
+            });
+        }
+
+        function loadChat(id) {
+            state.currentChatId = id; toggleHistoryModal(); const chat = state.chats.find(c => c.id === id); if (!chat) return;
+            document.getElementById('welcomeState').style.display = 'none'; 
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = ''; container.classList.remove('hidden', 'opacity-0'); 
+            chat.messages.forEach(msg => appendMessage(msg.role, msg.text, msg.metadata));
+        }
+
+        function clearCurrentChat() { state.currentChatId = null; document.getElementById('messagesContainer').innerHTML = ''; document.getElementById('welcomeState').style.display = 'flex'; document.getElementById('messagesContainer').classList.add('hidden', 'opacity-0'); }
+        function deleteAllHistory() { if(confirm('Delete all?')) { state.chats = []; localStorage.setItem('nexus_chats', '[]'); loadHistoryList(); clearCurrentChat(); } }
+        function resetApp() { window.location.reload(); }
+        
+        function initSpeech() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SR) {
+                recognition = new SR();
+                recognition.onstart = () => document.getElementById('micButton').classList.add('text-accent', 'animate-pulse');
+                recognition.onend = () => document.getElementById('micButton').classList.remove('text-accent', 'animate-pulse');
+                recognition.onresult = (e) => { document.getElementById('mainInput').value += e.results[0][0].transcript + ' '; toggleSendButton(); };
+            } else { document.getElementById('micButton').style.display = 'none'; }
+        }
+        function toggleSpeechInput() { if(recognition) { recognition.lang = state.lang; recognition.start(); } }
+        
+        // PWA Functions
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered:', reg))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            }
+        }
+        
+        function setupPWAInstall() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('installBtn').classList.remove('hidden');
+            });
+            
+            window.addEventListener('appinstalled', () => {
+                console.log('PWA installed');
+                deferredPrompt = null;
+                document.getElementById('installBtn').classList.add('hidden');
+            });
+        }
+        
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted install');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+        
+        function checkNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                document.getElementById('notifBtn').classList.remove('hidden');
+            }
+        }
+        
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification('NexusAI', {
+                            body: 'Bildirishnomalar yoqildi!',
+                            icon: 'icon-192.png'
+                        });
+                        document.getElementById('notifBtn').classList.add('hidden');
+                    }
+                });
+            }
+        }
+        
+        function openCamera() {
+            document.getElementById('imageUpload').click();
+        }
+        
+        function setupImageUpload() {
+            const uploadInput = document.getElementById('imageUpload');
+            uploadInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = event.target.result;
+                    // Rasmni xabarga qo'shish
+                    const inputEl = document.getElementById('mainInput');
+                    inputEl.value += `\n[Rasm yuklandi: ${file.name}]`;
+                    toggleSendButton();
+                    
+                    // Optionally: Base64 sifatida saqlash
+                    console.log('Image uploaded:', file.name);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // Share API
+        async function shareChat() {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'NexusAI Chat',
+                        text: 'NexusAI bilan chat qiling!',
+                        url: window.location.href
+                    });
+                } catch (err) {
+                    console.log('Share failed:', err);
+                }
+            }
+        }
+        
+        // Vibration API
+        function vibrate(pattern = [200]) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+        
+        // Wake Lock API - ekranni o'chmasligi uchun
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock active');
+                }
+            } catch (err) {
+                console.log('Wake Lock failed:', err);
+            }
+        }
+
+        // ============================================
+        // ADVANCED FEATURES
+        // ============================================
+
+        // 1. CODE EXECUTION - JavaScript sandbox
+        async function executeCode(code) {
+            try {
+                const func = new Function(code);
+                const result = await func();
+                return { success: true, output: String(result || 'Code executed successfully') };
+            } catch (e) {
+                return { success: false, output: `Error: ${e.message}` };
+            }
+        }
+
+        // 2. REAL-TIME DATA FUNCTIONS
+        async function fetchCryptoPrice(symbol = 'bitcoin') {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const res = await fetch(`https://api.coindesk.com/v1/bpi/currentprice/${symbol}.json`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (!res.ok) {
+                    console.error(`CoinDesk API error: ${res.status}`);
+                    return null;
+                }
+                
+                const data = await res.json();
+                const price = data.bpi?.[symbol.toUpperCase()]?.rate_float;
+                
+                if (price) {
+                    const formatted = `${symbol.toUpperCase()} Price: $${price.toFixed(2)} USD`;
+                    appendMessage('assistant', formatted, null);
+                }
+                return price || null;
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    appendMessage('error', 'Crypto price fetch timeout - network too slow');
+                } else {
+                    console.error('Crypto price fetch failed:', error.message);
+                }
+                return null;
+            }
+        }
+
+        async function fetchWeather(city = 'London') {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const res = await fetch(`https://wttr.in/${city}?format=j1`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (!res.ok) {
+                    console.error(`Weather API error: ${res.status}`);
+                    return null;
+                }
+                
+                const data = await res.json();
+                const current = data.current_condition?.[0];
+                
+                if (current) {
+                    const weather = {
+                        temp: current.temp_C + '°C',
+                        condition: current.weatherDesc?.[0]?.value || 'Unknown',
+                        humidity: current.humidity + '%',
+                        windSpeed: current.windspeedKmph + ' km/h'
+                    };
+                    
+                    const formatted = `🌍 Weather in ${city}:\n📊 Temperature: ${weather.temp}\n🌤️ Condition: ${weather.condition}\n💨 Wind: ${weather.windSpeed}\n💧 Humidity: ${weather.humidity}`;
+                    appendMessage('assistant', formatted, null);
+                    return weather;
+                }
+                return null;
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    appendMessage('error', 'Weather fetch timeout - network too slow');
+                } else {
+                    console.error('Weather fetch failed:', error.message);
+                }
+                return null;
+            }
+        }
+
+        async function fetchCurrencyRate(from = 'USD', to = 'EUR') {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${from}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (!res.ok) {
+                    console.error(`Currency API error: ${res.status}`);
+                    return null;
+                }
+                
+                const data = await res.json();
+                const rate = data.rates?.[to];
+                
+                if (rate) {
+                    const formatted = `💱 Exchange Rate:\n1 ${from} = ${rate.toFixed(4)} ${to}\n\nRate updated: ${new Date().toLocaleString()}`;
+                    appendMessage('assistant', formatted, null);
+                }
+                return rate || null;
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    appendMessage('error', 'Currency rate fetch timeout - network too slow');
+                } else {
+                    console.error('Currency rate fetch failed:', error.message);
+                }
+                return null;
+            }
+        }
+
+        // 3. PDF EXPORT
+        async function exportChatAsPDF() {
+            try {
+                const chat = state.chats.find(c => c.id === state.currentChatId);
+                if (!chat) return;
+                
+                let content = `NEXUS AI CHAT EXPORT\n\n`;
+                content += `Title: ${chat.title}\n`;
+                content += `Date: ${new Date(chat.date).toLocaleString()}\n`;
+                content += `Mode: ${state.mode}\n`;
+                content += `Language: ${state.lang}\n\n`;
+                content += `========================================\n\n`;
+                
+                chat.messages.forEach(msg => {
+                    content += `[${msg.role.toUpperCase()}]\n`;
+                    content += `${msg.text}\n\n`;
+                    if (msg.metadata?.sources?.length > 0) {
+                        content += `Sources:\n`;
+                        msg.metadata.sources.forEach(s => {
+                            content += `  - ${s.title}: ${s.url}\n`;
+                        });
+                        content += `\n`;
+                    }
+                });
+                
+                // Create blob and download
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `nexus-chat-${chat.id}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error('Export failed:', e);
+            }
+        }
+
+        // 4. ADVANCED SETTINGS
+        function updateSettings(setting, value) {
+            if (setting === 'theme') {
+                state.theme = value;
+                localStorage.setItem('nexus_theme', value);
+                document.documentElement.classList.toggle('dark', value === 'dark');
+            } else if (setting === 'lang') {
+                state.lang = value;
+                localStorage.setItem('nexus_lang', value);
+                applyLanguage(value);
+            } else if (setting === 'mode') {
+                state.mode = value;
+                localStorage.setItem('nexus_mode', value);
+            }
+        }
+
+        // 5. CLEAR ALL DATA
+        function clearAllData() {
+            if (confirm('🚨 Delete ALL chats and data? This cannot be undone!')) {
+                localStorage.clear();
+                state.chats = [];
+                state.currentChatId = null;
+                location.reload();
+            }
+        }
+
+        // 6. SHARE CHAT
+        async function shareChat() {
+            const chat = state.chats.find(c => c.id === state.currentChatId);
+            if (!chat) return;
+            
+            const text = `${chat.title}\n\n${chat.messages.map(m => `${m.role}: ${m.text}`).join('\n\n')}`;
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: chat.title, text: text });
+                } catch (e) {
+                    console.log('Share cancelled');
+                }
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(text).then(() => {
+                    appendMessage('system', '✅ Chat copied to clipboard!');
+                });
+            }
+        }
+
+        // 7. CONVERSATION STATS
+        function getChatStats() {
+            const chat = state.chats.find(c => c.id === state.currentChatId);
+            if (!chat) return null;
+            
+            const messages = chat.messages;
+            const userMsgs = messages.filter(m => m.role === 'user').length;
+            const aiMsgs = messages.filter(m => m.role === 'assistant').length;
+            const totalWords = messages.reduce((sum, m) => sum + m.text.split(' ').length, 0);
+            const withSources = messages.filter(m => m.metadata?.sources?.length > 0).length;
+            
+            return {
+                totalMessages: messages.length,
+                userMessages: userMsgs,
+                aiMessages: aiMsgs,
+                totalWords: totalWords,
+                messagesWithSources: withSources,
+                avgWordsPerMessage: Math.round(totalWords / messages.length)
+            };
+        }
+
+        // 8. ENHANCED VOICE OUTPUT (Text-to-Speech) with better error handling
+        function speakResponse(text) {
+            try {
+                if (!('speechSynthesis' in window)) {
+                    console.warn('Speech Synthesis not supported in this browser');
+                    return;
+                }
+                
+                // Cancel any previous speech
+                window.speechSynthesis.cancel();
+                
+                // Create utterance with proper error handling
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // Set language
+                const langMap = {
+                    'uz': 'uz-UZ',
+                    'en': 'en-US',
+                    'ru': 'ru-RU',
+                    'fr': 'fr-FR',
+                    'es': 'es-ES',
+                    'de': 'de-DE',
+                    'zh': 'zh-CN',
+                    'ja': 'ja-JP',
+                    'ar': 'ar-SA',
+                };
+                
+                utterance.lang = langMap[state.lang] || state.lang || 'en-US';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                // Error handlers
+                utterance.onerror = (event) => {
+                    console.error('Speech synthesis error:', event.error);
+                };
+                
+                utterance.onstart = () => {
+                    console.log('Speech started');
+                };
+                
+                utterance.onend = () => {
+                    console.log('Speech ended');
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.error('Voice output failed:', error.message);
+            }
+        }
+
+        // 9. SEARCH IN CHAT
+        function searchInChat(query) {
+            const chat = state.chats.find(c => c.id === state.currentChatId);
+            if (!chat) return [];
+            
+            return chat.messages.filter(m => 
+                m.text.toLowerCase().includes(query.toLowerCase())
+            );
+        }
+
+        // 10. BACKUP & RESTORE
+        function backupChats() {
+            const backup = JSON.stringify(state.chats);
+            const blob = new Blob([backup], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nexus-backup-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function restoreChats(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const chats = JSON.parse(e.target.result);
+                    state.chats = chats;
+                    localStorage.setItem('nexus_chats', JSON.stringify(chats));
+                    location.reload();
+                } catch (err) {
+                    appendMessage('error', 'Invalid backup file');
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+        <!-- Cordova bridge (loads on device builds) and app glue -->
+        <script src="cordova.js"></script>
+        <script src="js/app.js"></script>
+    </body>
+    </html>
