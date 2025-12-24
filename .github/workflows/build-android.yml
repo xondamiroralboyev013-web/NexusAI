@@ -41,11 +41,14 @@ jobs:
         run: |
           which gradle || (cd /tmp && curl -s "https://services.gradle.org/distributions/gradle-8.0-bin.zip" -o gradle.zip && unzip -q gradle.zip && export PATH=/tmp/gradle-8.0/bin:$PATH)
 
+      - name: Install Cordova globally
+        run: npm install -g cordova
+
       - name: Add Android platform
         run: npx cordova platform add android --no-interactive
 
       - name: Build APK (debug)
-        run: npx cordova build android --release=false --no-interactive
+        run: npx cordova build android --debug --no-interactive
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
