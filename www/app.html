@@ -863,6 +863,18 @@ const nexusai = {
         this.setupTheme();
         this.showAppropriateScreen();
         this.attachListeners();
+        this.setupNetworkMonitoring();
+    },
+    
+    setupNetworkMonitoring() {
+        // Monitor online/offline status
+        window.addEventListener('online', () => {
+            console.log('✅ Connection restored');
+        });
+        window.addEventListener('offline', () => {
+            console.log('❌ Connection lost');
+            this.addMessage('🔌 You are offline. Messages will be sent when connected.', 'assistant');
+        });
     },
     
     // Load data
@@ -1202,41 +1214,71 @@ const nexusai = {
             const loading = document.createElement('div');
             loading.style.textAlign = 'center';
             loading.innerHTML = '<p style="color: #64748B;">Thinking...</p>';
-            document.getElementById('messagesContainer').appendChild(loading);
+            const container = document.getElementById('messagesContainer');
+            container.appendChild(loading);
             
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 30000);
+            // Check internet connection
+            if (!navigator.onLine) {
+                if (loading.parentElement) loading.parentElement.removeChild(loading);
+                this.addMessage('❌ No internet connection. Please check your network.', 'assistant');
+                return;
+            }
             
-            const response = await fetch(this.state.config.api, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.state.config.apiKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    model: this.state.config.model,
-                    messages: [{ role: 'user', content: message }],
-                    max_tokens: 1000,
-                    temperature: 0.7,
-                }),
-                signal: controller.signal
-            });
+            // Retry logic for reliability
+            let response;
+            let lastError;
+            const maxRetries = 2;
             
-            clearTimeout(timeout);
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 35000);
+                    
+                    response = await fetch(this.state.config.api, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.state.config.apiKey}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            model: this.state.config.model,
+                            messages: [{ role: 'user', content: message }],
+                            max_tokens: 1000,
+                            temperature: 0.7,
+                        }),
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeout);
+                    break; // Success, exit retry loop
+                    
+                } catch (error) {
+                    lastError = error;
+                    if (attempt < maxRetries) {
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+                    }
+                }
+            }
+            
+            if (!response) {
+                throw lastError || new Error('Network request failed');
+            }
             
             if (loading.parentElement) loading.parentElement.removeChild(loading);
             
             if (!response.ok) {
                 let errorMsg = `API Error: ${response.status}`;
                 if (response.status === 401) errorMsg = '❌ Invalid API key. Check your settings.';
-                if (response.status === 429) errorMsg = '⏱️ Too many requests. Wait a moment and try again.';
-                if (response.status === 500) errorMsg = '❌ Groq server error. Try again later.';
-                if (response.status === 503) errorMsg = '⚠️ Groq API unavailable. Try again later.';
+                if (response.status === 429) errorMsg = '⏱️ Too many requests. Wait 60 seconds and try again.';
+                if (response.status === 500) errorMsg = '❌ Groq server error. Trying again...';
+                if (response.status === 502) errorMsg = '⚠️ Bad Gateway. Trying again...';
+                if (response.status === 503) errorMsg = '⚠️ Groq API temporarily unavailable. Try again in a moment.';
+                if (response.status === 504) errorMsg = '⏱️ Gateway timeout. Trying again...';
                 throw new Error(errorMsg);
             }
             
             const data = await response.json();
-            if (!data.choices || !data.choices[0]) throw new Error('Invalid API response');
+            if (!data.choices || !data.choices[0]) throw new Error('Invalid API response format');
             
             const aiMessage = data.choices[0].message.content;
             this.addMessage(aiMessage, 'assistant');
@@ -1247,9 +1289,14 @@ const nexusai = {
             }
             
         } catch (error) {
+            const container = document.getElementById('messagesContainer');
+            const loading = container.querySelector('p[style*="color: #64748B"]');
             if (loading && loading.parentElement) loading.parentElement.removeChild(loading);
+            
             if (error.name === 'AbortError') {
-                this.addMessage('⏱️ Request timeout. Check your internet connection.', 'assistant');
+                this.addMessage('⏱️ Request timeout. Check your internet and try again.', 'assistant');
+            } else if (error.message.includes('Failed to fetch')) {
+                this.addMessage('🔌 Connection lost. Check your internet connection.', 'assistant');
             } else {
                 this.addMessage(`❌ ${error.message}`, 'assistant');
             }
@@ -1362,39 +1409,75 @@ Please write a clear and persuasive visa application statement.`;
     },
 
     callGroqAPI(prompt) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000);
+        const maxRetries = 2;
+        let lastError;
         
-        return fetch(this.state.config.api, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${this.state.config.apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: this.state.config.model,
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0.7,
-                max_tokens: 2000
-            }),
-            signal: controller.signal
-        }).then(r => {
-            clearTimeout(timeout);
-            if (!r.ok) {
-                if (r.status === 401) throw new Error('Invalid API key');
-                if (r.status === 429) throw new Error('Too many requests. Please wait a moment.');
-                if (r.status === 500) throw new Error('Groq API server error. Try again later.');
-                throw new Error(`API Error: ${r.status}`);
+        const attemptCall = async (retryCount = 0) => {
+            // Check connection
+            if (!navigator.onLine) {
+                throw new Error('No internet connection');
             }
-            return r.json();
-        }).then(data => {
-            if (!data.choices || !data.choices[0]) throw new Error('Invalid API response');
-            return data.choices[0].message.content;
-        }).catch(err => {
-            clearTimeout(timeout);
-            if (err.name === 'AbortError') throw new Error('Request timeout. Check your connection.');
-            throw err;
-        });
+            
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 35000);
+            
+            try {
+                const response = await fetch(this.state.config.api, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.state.config.apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: this.state.config.model,
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.7,
+                        max_tokens: 2000
+                    }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeout);
+                
+                if (!response.ok) {
+                    if (response.status === 401) throw new Error('Invalid API key');
+                    if (response.status === 429) {
+                        if (retryCount < maxRetries) {
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            return attemptCall(retryCount + 1);
+                        }
+                        throw new Error('Too many requests. Please wait.');
+                    }
+                    if (response.status === 500 || response.status === 502 || response.status === 503) {
+                        if (retryCount < maxRetries) {
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+                            return attemptCall(retryCount + 1);
+                        }
+                    }
+                    throw new Error(`API Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (!data.choices || !data.choices[0]) throw new Error('Invalid API response');
+                return data.choices[0].message.content;
+                
+            } catch (err) {
+                clearTimeout(timeout);
+                if (err.name === 'AbortError') {
+                    throw new Error('Request timeout. Check your connection.');
+                }
+                if (err.message.includes('Failed to fetch')) {
+                    if (retryCount < maxRetries) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        return attemptCall(retryCount + 1);
+                    }
+                    throw new Error('Network connection failed');
+                }
+                throw err;
+            }
+        };
+        
+        return attemptCall();
     },
 
     copyToClipboard() {
