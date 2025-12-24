@@ -415,17 +415,43 @@
 <!-- ONBOARDING SCREEN -->
 <div id="onboardingScreen" class="onboarding-container">
     <div class="mb-32">
-        <svg class="logo-svg" viewBox="0 0 80 80" fill="none">
+        <svg class="logo-svg" viewBox="0 0 100 100" fill="none">
             <defs>
                 <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" style="stop-color:#0099FF;stop-opacity:1" />
                     <stop offset="100%" style="stop-color:#00DD88;stop-opacity:1" />
                 </linearGradient>
+                <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.2"/>
+                </filter>
             </defs>
-            <rect x="10" y="10" width="60" height="60" rx="16" fill="url(#grad1)"/>
-            <circle cx="40" cy="35" r="12" fill="white"/>
-            <path d="M 40 50 Q 30 55 25 60" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
-            <path d="M 40 50 Q 50 55 55 60" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <!-- Background -->
+            <rect x="8" y="8" width="84" height="84" rx="20" fill="url(#grad1)" filter="url(#shadow)"/>
+            
+            <!-- Neural network nodes -->
+            <circle cx="35" cy="30" r="5" fill="white"/>
+            <circle cx="50" cy="25" r="5" fill="white"/>
+            <circle cx="65" cy="30" r="5" fill="white"/>
+            
+            <circle cx="30" cy="50" r="5" fill="white"/>
+            <circle cx="50" cy="55" r="7" fill="white"/>
+            <circle cx="70" cy="50" r="5" fill="white"/>
+            
+            <circle cx="35" cy="70" r="5" fill="white"/>
+            <circle cx="50" cy="75" r="5" fill="white"/>
+            <circle cx="65" cy="70" r="5" fill="white"/>
+            
+            <!-- Connection lines -->
+            <line x1="35" y1="30" x2="50" y2="55" stroke="white" stroke-width="1.5" opacity="0.8"/>
+            <line x1="50" y1="25" x2="50" y2="55" stroke="white" stroke-width="1.5" opacity="0.8"/>
+            <line x1="65" y1="30" x2="50" y2="55" stroke="white" stroke-width="1.5" opacity="0.8"/>
+            
+            <line x1="50" y1="55" x2="35" y2="70" stroke="white" stroke-width="1.5" opacity="0.8"/>
+            <line x1="50" y1="55" x2="50" y2="75" stroke="white" stroke-width="1.5" opacity="0.8"/>
+            <line x1="50" y1="55" x2="65" y2="70" stroke="white" stroke-width="1.5" opacity="0.8"/>
+            
+            <line x1="30" y1="50" x2="50" y2="55" stroke="white" stroke-width="1.5" opacity="0.8"/>
+            <line x1="70" y1="50" x2="50" y2="55" stroke="white" stroke-width="1.5" opacity="0.8"/>
         </svg>
         <h1>NexusAI Pro</h1>
         <p>Advanced AI Assistant</p>
@@ -792,8 +818,12 @@
     
     <div class="input-area">
         <form id="messageForm">
-            <input type="text" id="messageInput" class="input-field" placeholder="Ask me anything..." autocomplete="off" required>
-            <button type="submit" class="btn-primary" style="padding: 12px 20px;">Send</button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="icon-btn" data-voice="input" onclick="nexusai.startVoiceInput()" title="Voice Input" style="font-size: 18px;">🎤</button>
+                <input type="text" id="messageInput" class="input-field" placeholder="Ask me anything..." autocomplete="off" required>
+                <button type="button" class="icon-btn" data-voice="output" onclick="nexusai.toggleVoiceOutput()" title="Toggle Voice Output" style="font-size: 18px; opacity: 0.5;">🔊</button>
+                <button type="submit" class="btn-primary" style="padding: 12px 20px;">Send</button>
+            </div>
         </form>
     </div>
 </div>
@@ -1081,6 +1111,8 @@ const nexusai = {
         if (btn) btn.style.opacity = this.state.voiceOutput ? '1' : '0.5';
     },
     
+    // Pro modal
+    openProModal() {
         document.getElementById('proModal').classList.add('show');
     },
     
