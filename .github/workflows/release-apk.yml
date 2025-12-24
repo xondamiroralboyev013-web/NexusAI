@@ -48,13 +48,3 @@ jobs:
         name: NexusAI-release-apk
         path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
         if-no-files-found: ignore
-
-    - name: Create Release
-      if: success()
-      uses: softprops/action-gh-release@v1
-      with:
-        files: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
-        tag_name: ${{ github.event.inputs.version }}
-        draft: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
