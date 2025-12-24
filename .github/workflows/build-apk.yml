@@ -28,25 +28,42 @@ jobs:
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v2
+      with:
+        api-level: 34
+        build-tools-version: '34.0.0'
+
+    - name: Set up Gradle
+      uses: gradle/gradle-build-action@v2
 
     - name: Install dependencies
       run: npm install
 
+    - name: Install Cordova globally
+      run: npm install -g cordova
+
     - name: Add Android platform
-      run: npx cordova platform add android
+      run: npx cordova platform add android --save
 
     - name: Build APK (Debug)
-      run: npx cordova build android --debug
+      run: npx cordova build android --debug 2>&1 | tee build.log
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v3
+      if: always()
       with:
         name: app-debug
         path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
 
+    - name: Upload build logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-logs
+        path: build.log
+
     - name: Create Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
       uses: softprops/action-gh-release@v1
       with:
         files: platforms/android/app/build/outputs/apk/debug/app-debug.apk
