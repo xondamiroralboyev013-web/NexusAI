@@ -580,7 +580,14 @@
             const tavilyKey = localStorage.getItem('tavily_api_key');
             const pixabayKey = localStorage.getItem('pixabay_api_key');
             
-            if (groqKey) CONFIG.apiKey = groqKey;
+            // Load from localStorage if available
+            if (groqKey) {
+                CONFIG.apiKey = groqKey;
+            } else {
+                // If no key saved, show notification to add one
+                console.warn('⚠️ No Groq API key configured. Open Settings → API Keys to add one.');
+            }
+            
             if (tavilyKey) CONFIG.tavilyKey = tavilyKey;
             if (pixabayKey) CONFIG.pixabayKey = pixabayKey;
         }
