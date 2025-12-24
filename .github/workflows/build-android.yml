@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
@@ -17,10 +17,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -28,56 +24,82 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Install npm packages
+        run: npm install
+
+      - name: Download Android SDK
+        run: |
+          mkdir -p $HOME/.android
+          touch $HOME/.android/repositories.cfg
+
+      - name: Setup Android SDK (API 34)
+        run: |
+          export ANDROID_HOME=$HOME/android-sdk
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip
+          unzip -q /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          yes | sdkmanager --licenses > /dev/null 2>&1
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1
 
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Add Android platform
-        run: cordova platform add android
-
-      - name: Build Debug APK
+      - name: Create Cordova project
         run: |
+          cordova create cordova-build com.nexusai.app NexusAI
+          cp -r www/* cordova-build/www/
+          cp config.xml cordova-build/
+
+      - name: Add Android platform to Cordova
+        working-directory: cordova-build
+        run: |
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          cordova platform add android
+
+      - name: Build APK
+        working-directory: cordova-build
+        run: |
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
           cordova build android --debug
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: nexusai-debug-apk
-          path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: warn
+      - name: Find and copy APK
+        run: |
+          mkdir -p ./release
+          find cordova-build -name "app-debug.apk" -exec cp {} ./release/app-debug.apk \;
+          ls -lah ./release/
 
-      - name: Create GitHub Release
-        if: success()
+      - name: Create Release
         uses: softprops/action-gh-release@v1
+        if: success()
         with:
-          files: platforms/android/app/build/outputs/apk/debug/app-debug.apk
-          tag_name: v1.0.${{ github.run_number }}
+          files: ./release/app-debug.apk
+          tag_name: apk-${{ github.run_number }}
           draft: false
           prerelease: false
           body: |
-            # NexusAI APK Release
+            # NexusAI APK Build #${{ github.run_number }}
             
-            ## Features
+            ## Ready to Use!
             - ✅ AI Chat with Groq LLaMA 3.1 8B
             - ✅ Voice Input & Output
-            - ✅ Application Writer (Job, University, Scholarship, Visa)
-            - ✅ OAuth Authentication
+            - ✅ Application Writer
+            - ✅ OAuth Support
             - ✅ Dark/Light Mode
-            - ✅ PWA Support
             
             ## Pre-configured
-            - API Endpoint: `https://api.groq.com/openai/v1/chat/completions`
-            - Model: `llama-3.1-8b-instant`
-            - Token: Pre-embedded (ready to use)
+            - API: https://api.groq.com/openai/v1/chat/completions
+            - Model: llama-3.1-8b-instant
+            - Token: Embedded (ready to use)
             
             ## Installation
-            1. Download `app-debug.apk`
-            2. Transfer to Android phone
-            3. Tap to install
-            4. Open app and start chatting!
-            
-            Build #${{ github.run_number }} - ${{ github.event.head_commit.message }}
+            1. Download app-debug.apk
+            2. Enable USB Debugging on Android phone
+            3. Transfer APK to phone
+            4. Tap to install
+            5. Open & start chatting!
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
