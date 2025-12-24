@@ -1244,6 +1244,9 @@ Please write a clear and persuasive visa application statement.`;
     },
 
     callGroqAPI(prompt) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        
         return fetch(this.state.config.api, {
             method: 'POST',
             headers: {
@@ -1255,11 +1258,25 @@ Please write a clear and persuasive visa application statement.`;
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0.7,
                 max_tokens: 2000
-            })
+            }),
+            signal: controller.signal
         }).then(r => {
-            if (!r.ok) throw new Error(`API Error: ${r.status}`);
+            clearTimeout(timeout);
+            if (!r.ok) {
+                if (r.status === 401) throw new Error('Invalid API key');
+                if (r.status === 429) throw new Error('Too many requests. Please wait a moment.');
+                if (r.status === 500) throw new Error('Groq API server error. Try again later.');
+                throw new Error(`API Error: ${r.status}`);
+            }
             return r.json();
-        }).then(data => data.choices[0].message.content);
+        }).then(data => {
+            if (!data.choices || !data.choices[0]) throw new Error('Invalid API response');
+            return data.choices[0].message.content;
+        }).catch(err => {
+            clearTimeout(timeout);
+            if (err.name === 'AbortError') throw new Error('Request timeout. Check your connection.');
+            throw err;
+        });
     },
 
     copyToClipboard() {
