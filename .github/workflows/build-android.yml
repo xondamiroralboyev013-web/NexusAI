@@ -18,52 +18,46 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install dependencies
-        run: npm ci
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '11'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          api-level: 31
 
-      - name: Accept Android licenses
-        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+      - name: Install dependencies
+        run: npm ci
 
       - name: Install Cordova
-        run: npm install -g cordova
-
-      - name: Remove existing Android platform
-        run: cordova platform remove android || true
+        run: sudo npm install -g cordova@13
 
       - name: Add Android platform
-        run: cordova platform add android@latest --nofetch
+        run: cordova platform add android
 
       - name: Build APK
-        run: cordova build android --debug 2>&1
-
-      - name: Find APK file
         run: |
-          find . -name "app-debug.apk" -type f
-          ls -lah platforms/android/app/build/outputs/apk/debug/
+          export GRADLE_USER_HOME=/tmp/gradle
+          cordova build android --debug
 
-      - name: Upload APK
+      - name: Upload APK Artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: nexusai-apk
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
 
       - name: Create Release
         if: success()
         uses: softprops/action-gh-release@v1
         with:
           files: platforms/android/app/build/outputs/apk/debug/app-debug.apk
-          tag_name: latest-apk
+          tag_name: v1.0.0
           draft: false
           prerelease: false
+          body: "NexusAI APK with Groq AI integration pre-configured"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
