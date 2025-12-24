@@ -909,26 +909,38 @@ const nexusai = {
     
     // Show screens
     showOnboardingScreen() {
-        document.getElementById('onboardingScreen').style.display = 'flex';
-        document.getElementById('setupScreen').style.display = 'none';
-        document.getElementById('appScreen').style.display = 'none';
+        const onboarding = document.getElementById('onboardingScreen');
+        const setup = document.getElementById('setupScreen');
+        const app = document.getElementById('appScreen');
+        if (onboarding) onboarding.style.display = 'flex';
+        if (setup) setup.style.display = 'none';
+        if (app) app.style.display = 'none';
     },
     
     showSetupScreen() {
-        document.getElementById('onboardingScreen').style.display = 'none';
-        document.getElementById('setupScreen').style.display = 'block';
-        document.getElementById('appScreen').style.display = 'none';
+        const onboarding = document.getElementById('onboardingScreen');
+        const setup = document.getElementById('setupScreen');
+        const app = document.getElementById('appScreen');
+        if (onboarding) onboarding.style.display = 'none';
+        if (setup) setup.style.display = 'block';
+        if (app) app.style.display = 'none';
         this.moveToStep(1);
     },
     
     showAppScreen() {
-        document.getElementById('onboardingScreen').style.display = 'none';
-        document.getElementById('setupScreen').style.display = 'none';
-        document.getElementById('appScreen').style.display = 'flex';
+        const onboarding = document.getElementById('onboardingScreen');
+        const setup = document.getElementById('setupScreen');
+        const app = document.getElementById('appScreen');
+        if (onboarding) onboarding.style.display = 'none';
+        if (setup) setup.style.display = 'none';
+        if (app) app.style.display = 'flex';
         
         if (this.state.currentUser) {
-            const name = this.state.currentUser.name.split(' ')[0];
-            document.getElementById('userGreeting').textContent = `Welcome back, ${name}!`;
+            const greeting = document.getElementById('userGreeting');
+            if (greeting) {
+                const name = this.state.currentUser.name.split(' ')[0];
+                greeting.textContent = `Welcome back, ${name}!`;
+            }
         }
     },
     
@@ -1068,53 +1080,75 @@ const nexusai = {
             return;
         }
         
-        // Cancel any ongoing speech
-        window.speechSynthesis.cancel();
-        
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-        utterance.lang = 'en-US';
-        
-        window.speechSynthesis.speak(utterance);
+        try {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            // Limit text length to avoid errors
+            const limitedText = text.substring(0, 5000);
+            
+            const utterance = new SpeechSynthesisUtterance(limitedText);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            utterance.lang = 'en-US';
+            
+            utterance.onerror = (error) => {
+                console.error('Speech synthesis error:', error);
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        } catch (error) {
+            console.error('Speech synthesis failed:', error);
+        }
     },
     
     startVoiceInput() {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'en-US';
-        recognition.continuous = false;
-        recognition.interimResults = false;
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            this.addMessage('❌ Voice input not supported in your browser', 'assistant');
+            return;
+        }
         
-        recognition.start();
-        
-        recognition.onstart = () => {
-            const btn = document.querySelector('[data-voice="input"]');
-            if (btn) btn.textContent = '🎤 Listening...';
-        };
-        
-        recognition.onresult = (event) => {
-            let transcript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                transcript += event.results[i][0].transcript;
-            }
+        try {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.continuous = false;
+            recognition.interimResults = false;
             
-            const input = document.getElementById('chatInput');
-            if (input) {
-                input.value = transcript;
-                this.sendMessage(transcript);
-            }
-        };
-        
-        recognition.onerror = (event) => {
-            console.log('Voice input error:', event.error);
-            this.addMessage('❌ Voice input error: ' + event.error, 'assistant');
-        };
-        
-        recognition.onend = () => {
-            const btn = document.querySelector('[data-voice="input"]');
-            if (btn) btn.textContent = '🎤 Voice';
-        };
+            recognition.start();
+            
+            recognition.onstart = () => {
+                const btn = document.querySelector('[data-voice="input"]');
+                if (btn) btn.textContent = '🎤 Listening...';
+            };
+            
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                
+                const input = document.getElementById('messageInput');
+                if (input && transcript.trim()) {
+                    input.value = transcript;
+                    this.sendMessage(transcript);
+                }
+            };
+            
+            recognition.onerror = (event) => {
+                console.log('Voice input error:', event.error);
+                const btn = document.querySelector('[data-voice="input"]');
+                if (btn) btn.textContent = '🎤 Voice';
+                this.addMessage('❌ Voice input error: ' + event.error, 'assistant');
+            };
+            
+            recognition.onend = () => {
+                const btn = document.querySelector('[data-voice="input"]');
+                if (btn) btn.textContent = '🎤 Voice';
+            };
+        } catch (error) {
+            this.addMessage('❌ Voice input failed: ' + error.message, 'assistant');
+        }
     },
     
     toggleVoiceOutput() {
@@ -1185,14 +1219,22 @@ const nexusai = {
     // Messages
     addMessage(content, role) {
         const container = document.getElementById('messagesContainer');
+        if (!container) {
+            console.error('Messages container not found');
+            return;
+        }
+        
         const msgDiv = document.createElement('div');
         msgDiv.style.display = 'flex';
         msgDiv.style.justifyContent = role === 'user' ? 'flex-end' : 'flex-start';
         msgDiv.style.gap = '8px';
+        msgDiv.style.marginBottom = '8px';
         
         const bubble = document.createElement('div');
         bubble.className = 'message-bubble ' + (role === 'user' ? 'message-user' : 'message-assistant');
         bubble.textContent = content;
+        bubble.style.maxWidth = '80%';
+        bubble.style.wordWrap = 'break-word';
         
         msgDiv.appendChild(bubble);
         container.appendChild(msgDiv);
