@@ -101,3 +101,5 @@ npm run build:debug
 **Ready?** Pick your option above and get started! 🚀
 
 **Automated build:** Triggered GitHub Actions workflow to build APK on 2025-12-24 00:00 UTC.
+
+**CI note:** To embed a Groq API key into CI-built APKs (not recommended for public repos), add a repository secret named `GROQ_API_KEY` (Settings → Secrets), and the workflow will inject it during the build step. Prefer users set the key in the app Settings (securely stored in localStorage).
