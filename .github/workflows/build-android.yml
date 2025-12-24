@@ -7,16 +7,20 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    runs-on: macos-latest
+    
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -26,38 +30,54 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          api-level: 31
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Install Cordova
-        run: sudo npm install -g cordova@13
+        run: npm install -g cordova
 
       - name: Add Android platform
         run: cordova platform add android
 
-      - name: Build APK
+      - name: Build Debug APK
         run: |
-          export GRADLE_USER_HOME=/tmp/gradle
           cordova build android --debug
 
       - name: Upload APK Artifact
-        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: nexusai-apk
+          name: nexusai-debug-apk
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: warn
 
-      - name: Create Release
+      - name: Create GitHub Release
         if: success()
         uses: softprops/action-gh-release@v1
         with:
           files: platforms/android/app/build/outputs/apk/debug/app-debug.apk
-          tag_name: v1.0.0
+          tag_name: v1.0.${{ github.run_number }}
           draft: false
           prerelease: false
-          body: "NexusAI APK with Groq AI integration pre-configured"
+          body: |
+            # NexusAI APK Release
+            
+            ## Features
+            - ✅ AI Chat with Groq LLaMA 3.1 8B
+            - ✅ Voice Input & Output
+            - ✅ Application Writer (Job, University, Scholarship, Visa)
+            - ✅ OAuth Authentication
+            - ✅ Dark/Light Mode
+            - ✅ PWA Support
+            
+            ## Pre-configured
+            - API Endpoint: `https://api.groq.com/openai/v1/chat/completions`
+            - Model: `llama-3.1-8b-instant`
+            - Token: Pre-embedded (ready to use)
+            
+            ## Installation
+            1. Download `app-debug.apk`
+            2. Transfer to Android phone
+            3. Tap to install
+            4. Open app and start chatting!
+            
+            Build #${{ github.run_number }} - ${{ github.event.head_commit.message }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
