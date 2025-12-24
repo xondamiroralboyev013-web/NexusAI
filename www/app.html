@@ -812,6 +812,7 @@ const nexusai = {
             model: 'llama-3.1-8b-instant',
         },
         appMode: 'chat',
+        voiceOutput: false,
         applicationForm: {
             type: 'job',
             fullName: '',
@@ -1018,8 +1019,68 @@ const nexusai = {
         this.applyTheme(current);
     },
     
-    // Pro modal
-    openProModal() {
+    // Voice functions
+    speakText(text) {
+        if (!('speechSynthesis' in window)) {
+            console.log('Speech synthesis not supported');
+            return;
+        }
+        
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        utterance.lang = 'en-US';
+        
+        window.speechSynthesis.speak(utterance);
+    },
+    
+    startVoiceInput() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        
+        recognition.start();
+        
+        recognition.onstart = () => {
+            const btn = document.querySelector('[data-voice="input"]');
+            if (btn) btn.textContent = '🎤 Listening...';
+        };
+        
+        recognition.onresult = (event) => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            
+            const input = document.getElementById('chatInput');
+            if (input) {
+                input.value = transcript;
+                this.sendMessage(transcript);
+            }
+        };
+        
+        recognition.onerror = (event) => {
+            console.log('Voice input error:', event.error);
+            this.addMessage('❌ Voice input error: ' + event.error, 'assistant');
+        };
+        
+        recognition.onend = () => {
+            const btn = document.querySelector('[data-voice="input"]');
+            if (btn) btn.textContent = '🎤 Voice';
+        };
+    },
+    
+    toggleVoiceOutput() {
+        this.state.voiceOutput = !this.state.voiceOutput;
+        const btn = document.querySelector('[data-voice="output"]');
+        if (btn) btn.style.opacity = this.state.voiceOutput ? '1' : '0.5';
+    },
+    
         document.getElementById('proModal').classList.add('show');
     },
     
@@ -1101,7 +1162,7 @@ const nexusai = {
         this.addMessage(message, 'user');
         
         try {
-            if (this.state.config.apiKey === 'YOUR_GROQ_API_KEY_HERE') {
+            if (this.state.config.apiKey === 'YOUR_GROQ_API_KEY_HERE' || !this.state.config.apiKey) {
                 this.addMessage('⚠️ Please add your Groq API key in Settings first', 'assistant');
                 return;
             }
@@ -1110,6 +1171,9 @@ const nexusai = {
             loading.style.textAlign = 'center';
             loading.innerHTML = '<p style="color: #64748B;">Thinking...</p>';
             document.getElementById('messagesContainer').appendChild(loading);
+            
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 30000);
             
             const response = await fetch(this.state.config.api, {
                 method: 'POST',
@@ -1122,19 +1186,41 @@ const nexusai = {
                     messages: [{ role: 'user', content: message }],
                     max_tokens: 1000,
                     temperature: 0.7,
-                })
+                }),
+                signal: controller.signal
             });
+            
+            clearTimeout(timeout);
             
             if (loading.parentElement) loading.parentElement.removeChild(loading);
             
-            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+            if (!response.ok) {
+                let errorMsg = `API Error: ${response.status}`;
+                if (response.status === 401) errorMsg = '❌ Invalid API key. Check your settings.';
+                if (response.status === 429) errorMsg = '⏱️ Too many requests. Wait a moment and try again.';
+                if (response.status === 500) errorMsg = '❌ Groq server error. Try again later.';
+                if (response.status === 503) errorMsg = '⚠️ Groq API unavailable. Try again later.';
+                throw new Error(errorMsg);
+            }
             
             const data = await response.json();
+            if (!data.choices || !data.choices[0]) throw new Error('Invalid API response');
+            
             const aiMessage = data.choices[0].message.content;
             this.addMessage(aiMessage, 'assistant');
             
+            // Speak AI response if voice output enabled
+            if (this.state.voiceOutput) {
+                this.speakText(aiMessage);
+            }
+            
         } catch (error) {
-            this.addMessage(`❌ Error: ${error.message}`, 'assistant');
+            if (loading && loading.parentElement) loading.parentElement.removeChild(loading);
+            if (error.name === 'AbortError') {
+                this.addMessage('⏱️ Request timeout. Check your internet connection.', 'assistant');
+            } else {
+                this.addMessage(`❌ ${error.message}`, 'assistant');
+            }
         }
     },
 
