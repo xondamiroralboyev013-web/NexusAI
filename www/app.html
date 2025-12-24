@@ -662,8 +662,17 @@
                 <div style="width: 64px; height: 64px; border-radius: 24px; background: linear-gradient(135deg, #0099FF 0%, #00DD88 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
                     <span style="color: white; font-size: 32px;">💬</span>
                 </div>
-                <h2>Start a Conversation</h2>
-                <p>Ask me anything - I'm here to help!</p>
+                <h2>Welcome to NexusAI!</h2>
+                <p style="margin-bottom: 24px;">What can I help you with today?</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button onclick="document.getElementById('messageInput').value='Help me write a professional email'; document.getElementById('messageForm').dispatchEvent(new Event('submit'));" style="padding: 12px; background: #E2E8F0; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s;">✉️ Write an Email</button>
+                    <button onclick="document.getElementById('messageInput').value='Explain quantum computing in simple terms'; document.getElementById('messageForm').dispatchEvent(new Event('submit'));" style="padding: 12px; background: #E2E8F0; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s;">🧠 Learn Something New</button>
+                    <button onclick="document.getElementById('messageInput').value='Help me brainstorm ideas for a new project'; document.getElementById('messageForm').dispatchEvent(new Event('submit'));" style="padding: 12px; background: #E2E8F0; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s;">💡 Brainstorm Ideas</button>
+                    <button onclick="document.getElementById('messageInput').value='What are the best practices for this?'; document.getElementById('messageForm').dispatchEvent(new Event('submit'));" style="padding: 12px; background: #E2E8F0; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s;">📚 Get Advice</button>
+                </div>
+                
+                <p style="margin-top: 24px; font-size: 12px; color: #94a3b8;">Or type your own question below and press Enter</p>
             </div>
         </div>
         
