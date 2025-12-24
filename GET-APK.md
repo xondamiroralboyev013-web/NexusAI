@@ -99,3 +99,5 @@ npm run build:debug
 **Questions?** Read DOWNLOAD-APK.md for detailed instructions.
 
 **Ready?** Pick your option above and get started! 🚀
+
+**Automated build:** Triggered GitHub Actions workflow to build APK on 2025-12-24 00:00 UTC.
