@@ -33,6 +33,11 @@ jobs:
     - name: Add Cordova as dev dependency
       run: npm install --save-dev cordova
 
+    - name: Inject Groq API Token
+      env:
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      run: node build-with-token.js
+
     - name: Add Android platform
       run: npx cordova platform add android
 
@@ -45,3 +50,4 @@ jobs:
         name: NexusAI-debug-apk
         path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
         if-no-files-found: ignore
+
