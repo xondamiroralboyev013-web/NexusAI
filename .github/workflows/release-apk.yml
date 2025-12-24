@@ -14,62 +14,47 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
 
     - name: Setup Java
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
-      with:
-        api-level: 34
-        build-tools-version: '34.0.0'
+      uses: android-actions/setup-android@v3
 
-    - name: Set up Gradle
-      uses: gradle/gradle-build-action@v2
-
-    - name: Install dependencies
+    - name: Install npm dependencies
       run: npm install
 
-    - name: Install Cordova globally
-      run: npm install -g cordova
+    - name: Add Cordova as dev dependency
+      run: npm install --save-dev cordova
 
     - name: Add Android platform
-      run: npx cordova platform add android --save
+      run: npx cordova platform add android
 
     - name: Build Release APK
-      run: npx cordova build android --release 2>&1 | tee build.log
+      run: npx cordova build android --release
 
-    - name: Upload Release APK artifact
-      uses: actions/upload-artifact@v3
-      if: always()
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
       with:
-        name: app-release
+        name: NexusAI-release-apk
         path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
-        retention-days: 30
+        if-no-files-found: ignore
 
-    - name: Create GitHub Release
+    - name: Create Release
       if: success()
       uses: softprops/action-gh-release@v1
       with:
         files: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
         tag_name: ${{ github.event.inputs.version }}
         draft: true
-        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Upload build logs on failure
-      if: failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: release-build-logs
-        path: build.log
