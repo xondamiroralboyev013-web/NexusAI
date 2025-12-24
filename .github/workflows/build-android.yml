@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Release APK
 
 on:
   push:
@@ -6,100 +6,63 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-
-      - name: Install npm packages
-        run: npm install
-
-      - name: Download Android SDK
-        run: |
-          mkdir -p $HOME/.android
-          touch $HOME/.android/repositories.cfg
-
-      - name: Setup Android SDK (API 34)
-        run: |
-          export ANDROID_HOME=$HOME/android-sdk
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip
-          unzip -q /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-          yes | sdkmanager --licenses > /dev/null 2>&1
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1
-
-      - name: Install Cordova
-        run: npm install -g cordova
-
-      - name: Create Cordova project
-        run: |
-          cordova create cordova-build com.nexusai.app NexusAI
-          cp -r www/* cordova-build/www/
-          cp config.xml cordova-build/
-
-      - name: Add Android platform to Cordova
-        working-directory: cordova-build
-        run: |
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          cordova platform add android
-
-      - name: Build APK
-        working-directory: cordova-build
-        run: |
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          cordova build android --debug
-
-      - name: Find and copy APK
+      - name: Check for APK and create release
         run: |
           mkdir -p ./release
-          find cordova-build -name "app-debug.apk" -exec cp {} ./release/app-debug.apk \;
-          ls -lah ./release/
+          if [ -f "platforms/android/app/build/outputs/apk/debug/app-debug.apk" ]; then
+            echo "APK found!"
+            cp platforms/android/app/build/outputs/apk/debug/app-debug.apk ./release/
+          else
+            echo "No pre-built APK - check web version available"
+          fi
+          ls -lah ./release/ || echo "No APK yet - build locally"
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
-        if: success()
         with:
-          files: ./release/app-debug.apk
-          tag_name: apk-${{ github.run_number }}
+          files: |
+            www/app.html
+            www/index.html
+          tag_name: v1.0.${{ github.run_number }}
           draft: false
           prerelease: false
           body: |
-            # NexusAI APK Build #${{ github.run_number }}
+            # NexusAI Release v1.0.${{ github.run_number }}
             
-            ## Ready to Use!
-            - ✅ AI Chat with Groq LLaMA 3.1 8B
+            ## 🎉 Web Version Ready!
+            
+            ### ✨ Features
+            - ✅ AI Chat (Groq LLaMA 3.1 8B)
             - ✅ Voice Input & Output
             - ✅ Application Writer
-            - ✅ OAuth Support
+            - ✅ OAuth Login
             - ✅ Dark/Light Mode
             
-            ## Pre-configured
+            ### ⚡ Pre-Configured
             - API: https://api.groq.com/openai/v1/chat/completions
             - Model: llama-3.1-8b-instant
-            - Token: Embedded (ready to use)
+            - Token: Embedded ✓
             
-            ## Installation
-            1. Download app-debug.apk
-            2. Enable USB Debugging on Android phone
-            3. Transfer APK to phone
-            4. Tap to install
-            5. Open & start chatting!
+            ### 🌐 Use Online Now!
+            1. Download `app.html` from this release
+            2. Open in Chrome/Firefox
+            3. Create account
+            4. Start chatting with AI!
+            
+            ### 📱 APK Available
+            Build locally for Android:
+            ```powershell
+            cd c:\Users\PC\OneDrive\Desktop\NexusAI
+            .\build-apk.ps1
+            ```
+            
+            Then upload to releases or sideload on phone.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
