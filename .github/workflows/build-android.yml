@@ -32,12 +32,7 @@ jobs:
 
       - name: Verify API token in app
         run: |
-          if grep -q "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" www/app.html; then
-            echo "✅ API token found in app.html"
-          else
-            echo "⚠️ API token not found - web version may need manual setup"
-          fi
-          if grep -q "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" www/index.html; then
+          if grep -q "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" www/index.html; then
             echo "✅ API token found in index.html"
           else
             echo "⚠️ API token not found - web version may need manual setup"
