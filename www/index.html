@@ -419,7 +419,8 @@
             // OpenRouter API Configuration - Professional LLM Service
             api: 'https://openrouter.ai/api/v1/chat/completions',
             apiKey: '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',
-            model: 'openai/gpt-3.5-turbo', // Stable & reliable model
+            model: 'openai/gpt-3.5-turbo', // OpenRouter supported model
+            appName: 'NexusAI/1.0.0', // Required by OpenRouter
             pixabayKey: localStorage.getItem('pixabay_api_key') || 'PIXABAY_KEY_NOT_SET',
             tavilyKey: localStorage.getItem('tavily_api_key') || 'TAVILY_KEY_NOT_SET'
         };
@@ -534,10 +535,16 @@
             if (tavilyKey) CONFIG.tavilyKey = tavilyKey;
             if (pixabayKey) CONFIG.pixabayKey = pixabayKey;
             
-            // Test API connection
-            testApiConnection();
+            console.log('✅ OpenRouter API initialized.');
+            console.log('🔑 API Endpoint:', CONFIG.api);
+            console.log('📦 Model:', CONFIG.model);
+            console.log('🔑 Key:', CONFIG.apiKey.substring(0, 10) + '...');
             
-            console.log('✅ OpenRouter API initialized with GPT-3.5-Turbo model.');
+            // Test API connection after small delay
+            setTimeout(() => {
+                console.log('Starting API test...');
+                testApiConnection();
+            }, 500);
         }
         
         // Test API connection
@@ -545,34 +552,43 @@
             try {
                 console.log('🔍 Testing OpenRouter API connection...');
                 console.log('API Key:', CONFIG.apiKey.substring(0, 15) + '...');
+                console.log('Model:', CONFIG.model);
+                
+                const testBody = {
+                    messages: [{ role: "user", content: "Salom!" }],
+                    model: CONFIG.model,
+                    max_tokens: 20,
+                    temperature: 0.7
+                };
+                
+                console.log('Request body:', testBody);
                 
                 const testResponse = await fetch(CONFIG.api, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json', 
                         'Authorization': `Bearer ${CONFIG.apiKey}`,
-                        'HTTP-Referer': 'https://nexusai.app',
-                        'X-Title': 'NexusAI Test'
+                        'User-Agent': CONFIG.appName,
+                        'HTTP-Referer': 'https://nexusai.app'
                     },
-                    body: JSON.stringify({
-                        messages: [{ role: "user", content: "Salom!" }],
-                        model: CONFIG.model,
-                        max_tokens: 20
-                    })
+                    body: JSON.stringify(testBody)
                 });
+                
+                console.log('Response status:', testResponse.status);
                 
                 if (testResponse.ok) {
                     const data = await testResponse.json();
-                    appendMessage('assistant', '✅ OpenRouter API Connected!\n\nAPI is responding correctly. Ready to chat!', null);
+                    console.log('Response data:', data);
+                    appendMessage('assistant', '✅ OpenRouter API Connected!\n\n' + data.choices[0].message.content, null);
                     console.log('✅ API connection successful!');
                 } else {
                     const error = await testResponse.text();
+                    console.error('Full error response:', error);
                     appendMessage('error', `❌ API connection failed: ${testResponse.status}\n${error}`);
-                    console.error('❌ API connection failed:', testResponse.status, error);
                 }
             } catch (e) {
                 appendMessage('error', `❌ API test error: ${e.message}`);
-                console.error('❌ API test error:', e.message);
+                console.error('❌ API test error:', e);
             }
         }
         
@@ -792,20 +808,25 @@ Check browser console (F12) for detailed logs.
                 const requestBody = {
                     messages: messages,
                     model: CONFIG.model,
-                    max_tokens: 1000,
-                    temperature: 0.7
+                    max_tokens: 2000,
+                    temperature: 0.7,
+                    top_p: 0.95,
+                    frequency_penalty: 0,
+                    presence_penalty: 0
                 };
 
-                console.log('🔄 Sending request to OpenRouter API...', { api: CONFIG.api, model: CONFIG.model });
-                console.log('📨 Message count:', messages.length);
+                console.log('🔄 Sending request to OpenRouter API...');
+                console.log('📨 API:', CONFIG.api);
+                console.log('📦 Model:', CONFIG.model);
+                console.log('💬 Messages:', messages.length);
                 
                 const response = await fetch(CONFIG.api, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json', 
                         'Authorization': `Bearer ${CONFIG.apiKey}`,
-                        'HTTP-Referer': 'https://nexusai.app',
-                        'X-Title': 'NexusAI Sovereign'
+                        'User-Agent': CONFIG.appName,
+                        'HTTP-Referer': 'https://nexusai.app'
                     },
                     body: JSON.stringify(requestBody)
                 });
@@ -814,13 +835,16 @@ Check browser console (F12) for detailed logs.
                 
                 if(!response.ok) {
                     const errorData = await response.text();
-                    console.error('❌ API Error:', response.status, errorData);
+                    console.error('❌ API Error Status:', response.status);
+                    console.error('❌ Error Response:', errorData);
                     throw new Error(`API Error ${response.status}: ${errorData}`);
                 }
                 
                 const data = await response.json();
-                console.log('📦 API Response:', data);
-                let aiText = data.choices?.[0]?.message?.content || "Connection interruption.";
+                console.log('✅ Response received successfully');
+                console.log('📦 Response data:', data);
+                let aiText = data.choices?.[0]?.message?.content || "No response received.";
+                console.log('💬 AI Response:', aiText);
                 removeSkeleton(loaderId);
                 
                 // Parsing
@@ -883,9 +907,12 @@ Check browser console (F12) for detailed logs.
 
             } catch (err) { 
                 removeSkeleton(loaderId);
-                console.error('❌ Error in sendMessage:', err);
-                const errorMsg = err.message || 'Connection interruption';
-                appendMessage('error', `⚠️ ${errorMsg}`);
+                console.error('❌ FULL ERROR:', err);
+                console.error('❌ Error name:', err.name);
+                console.error('❌ Error message:', err.message);
+                console.error('❌ Error stack:', err.stack);
+                const errorMsg = err.message || 'Connection failed';
+                appendMessage('error', `⚠️ ${errorMsg}. Check F12 console for details.`);
             }
         }
 
