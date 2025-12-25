@@ -1,78 +1,157 @@
-name: Build APK from GitHub
+name: 🚀 Build APK - NexusAI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
-  
+    paths:
+      - 'www/**'
+      - 'config.xml'
+      - 'package.json'
+      - '.github/workflows/build-apk-github-actions.yml'
+
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # 1️⃣ CODE CHECKOUT
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      # 2️⃣ NODE SETUP
+      - name: 📦 Setup Node.js 18
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
       
-      - name: Setup Java
-        uses: actions/setup-java@v3
+      # 3️⃣ JAVA SETUP  
+      - name: ☕ Setup Java 11
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '11'
+          cache: gradle
       
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-        with:
-          api-levels: 31
-          build-tools: 31.0.0
-          ndk-version: 24.0.8215888
+      # 4️⃣ ANDROID SDK SETUP
+      - name: 🔧 Setup Android SDK
+        uses: android-actions/setup-android@v3
       
-      - name: Install dependencies
+      # 5️⃣ INSTALL DEPENDENCIES
+      - name: 🔨 Install Cordova & Dependencies
         run: |
-          npm install -g cordova
-          npm install
+          npm install -g cordova@14.0.1
+          npm ci
+          echo "✅ Dependencies installed"
       
-      - name: Add Android platform
-        run: cordova platform add android
+      # 6️⃣ ADD ANDROID PLATFORM
+      - name: 📱 Add Android Platform
+        run: |
+          cordova platform add android --save
+          echo "✅ Android platform added"
       
-      - name: Build APK
-        run: cordova build android --release
-        
-      - name: Find APK
+      # 7️⃣ BUILD APK
+      - name: 🏗️ Build APK (Release Mode)
+        run: |
+          cordova build android --release
+          echo "✅ APK build completed"
+      
+      # 8️⃣ FIND & VERIFY APK
+      - name: 🔍 Find APK File
         id: find-apk
         run: |
-          APK_PATH=$(find . -name "*.apk" -type f | grep -i release | head -1)
+          APK_PATH=$(find . -type f -name "*.apk" | head -1)
           if [ -z "$APK_PATH" ]; then
-            APK_PATH=$(find . -name "*.apk" -type f | head -1)
+            echo "❌ APK not found!"
+            exit 1
           fi
-          echo "APK found at: $APK_PATH"
-          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+          echo "APK_PATH=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "APK_SIZE=$APK_SIZE" >> $GITHUB_OUTPUT
+          echo "✅ APK Found: $APK_PATH ($APK_SIZE)"
           ls -lh "$APK_PATH"
       
-      - name: Upload APK to Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+      # 9️⃣ RENAME APK
+      - name: 📝 Rename APK
+        run: |
+          OLD_APK="${{ steps.find-apk.outputs.APK_PATH }}"
+          NEW_APK="NexusAI-v1.0.0-release.apk"
+          mv "$OLD_APK" "$NEW_APK"
+          echo "✅ APK renamed to: $NEW_APK"
+          ls -lh "$NEW_APK"
+      
+      # 🔟 UPLOAD AS ARTIFACT
+      - name: 📤 Upload APK as Artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: ${{ steps.find-apk.outputs.apk_path }}
+          name: NexusAI-APK-Release
+          path: NexusAI-v1.0.0-release.apk
+          retention-days: 90
+          if-no-files-found: error
+      
+      # 1️⃣1️⃣ CREATE GITHUB RELEASE
+      - name: 🎉 Create GitHub Release
+        id: create-release
+        uses: actions/create-release@v1
+        if: success()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Upload APK as Artifact
-        uses: actions/upload-artifact@v3
         with:
-          name: NexusAI-APK
-          path: ${{ steps.find-apk.outputs.apk_path }}
-          retention-days: 30
+          tag_name: apk-build-${{ github.run_number }}
+          release_name: NexusAI APK v1.0.0 (Build ${{ github.run_number }})
+          body: |
+            ✅ **APK Ready!**
+            
+            📱 **File:** NexusAI-v1.0.0-release.apk
+            📊 **Size:** ${{ steps.find-apk.outputs.APK_SIZE }}
+            🔗 **Built from:** ${{ github.sha }}
+            
+            **Installation:**
+            1. Download APK file
+            2. Enable "Unknown Sources" in settings
+            3. Install on Android device
+            
+            **How to use:**
+            1. Open NexusAI app
+            2. Add your Groq API key
+            3. Start chatting!
+          draft: false
+          prerelease: false
       
-      - name: Create Release Note
+      # 1️⃣2️⃣ UPLOAD TO RELEASE
+      - name: 📥 Upload APK to Release
+        uses: actions/upload-release-asset@v1
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./NexusAI-v1.0.0-release.apk
+          asset_name: NexusAI-v1.0.0-release.apk
+          asset_content_type: application/vnd.android.package-archive
+      
+      # 1️⃣3️⃣ BUILD SUCCESS
+      - name: ✨ Build Success Summary
+        if: success()
         run: |
-          echo "✅ APK Tayyor!" > release.txt
-          echo "📱 NexusAI APK Version 1.0.0" >> release.txt
-          echo "🔗 GitHub Actions orqali yaratilgan" >> release.txt
-          echo "" >> release.txt
-          echo "APK Fayllar:" >> release.txt
-          find . -name "*.apk" -type f -exec ls -lh {} \;
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ NexusAI APK BUILD SUCCESS!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "📱 APK File: NexusAI-v1.0.0-release.apk"
+          echo "📊 Size: ${{ steps.find-apk.outputs.APK_SIZE }}"
+          echo "🔗 Releases: https://github.com/${{ github.repository }}/releases"
+          echo "📥 Artifacts: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      # 1️⃣4️⃣ BUILD FAILURE
+      - name: ❌ Build Failure Summary
+        if: failure()
+        run: |
+          echo "❌ BUILD FAILED - Check logs above"
+          exit 1
