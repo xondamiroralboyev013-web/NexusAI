@@ -16,10 +16,11 @@ jobs:
       - name: Verify app files
         run: |
           echo "✅ Checking app files..."
-          [ -f "www/app.html" ] && echo "✅ app.html found" || echo "❌ app.html missing"
-          [ -f "www/index.html" ] && echo "✅ index.html found" || echo "❌ index.html missing"
-          [ -f "config.xml" ] && echo "✅ config.xml found" || echo "❌ config.xml missing"
-          [ -f "package.json" ] && echo "✅ package.json found" || echo "❌ package.json missing"
+          [ -f "www/app.html" ] && echo "✅ app.html found" || (echo "❌ app.html missing" && exit 1)
+          [ -f "www/index.html" ] && echo "✅ index.html found" || (echo "❌ index.html missing" && exit 1)
+          [ -f "config.xml" ] && echo "✅ config.xml found" || (echo "❌ config.xml missing" && exit 1)
+          [ -f "package.json" ] && echo "✅ package.json found" || (echo "❌ package.json missing" && exit 1)
+          [ -f "www/logo.svg" ] && echo "✅ logo.svg found" || (echo "❌ logo.svg missing" && exit 1)
           echo "✅ All essential files present!"
 
       - name: Setup Node.js
@@ -30,16 +31,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Verify API token in app
+      - name: Verify Groq API configuration
         run: |
-          if grep -q "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" www/index.html; then
-            echo "✅ OpenRouter API token found in index.html"
+          echo "✅ Checking Groq API configuration..."
+          if grep -q "api.groq.com" www/index.html; then
+            echo "✅ Groq API endpoint configured"
           else
-            echo "⚠️ API token not found - web version may need manual setup"
+            echo "❌ Groq API endpoint missing"
+            exit 1
           fi
           
-          if grep -q "gpt-3.5-turbo" www/index.html; then
-            echo "✅ GPT-3.5-Turbo model configured"
+          if grep -q "mixtral-8x7b-32768" www/index.html; then
+            echo "✅ Mixtral model configured"
           else
             echo "⚠️ Model configuration might need update"
           fi
@@ -51,33 +54,46 @@ jobs:
             www/app.html
             www/index.html
             www/manifest.json
-            APK-VERIFICATION.md
-          tag_name: release-${{ github.run_number }}
+            www/logo.svg
+            APK-BUILD-GUIDE.md
+            DEPLOYMENT-READY.md
+          tag_name: v${{ github.run_number }}
           draft: false
           prerelease: false
           body: |
-            # NexusAI Release ${{ github.run_number }}
+            # NexusAI Release v${{ github.run_number }}
             
             ## 🚀 Ready to Use!
             
             ### Web Version (Use Immediately)
             1. Download `app.html` from this release
             2. Open in Chrome/Firefox on any device
-            3. Create account & start chatting
+            3. Add Groq API key & start chatting
             
             ### Features
-            ✅ AI Chat with Groq LLaMA 3.1 8B
+            ✅ AI Chat with Groq Mixtral 8x7B
             ✅ Voice Input & Output
-            ✅ Application Writer
-            ✅ OAuth Authentication
+            ✅ Web Search Integration
+            ✅ Image Generation/Search
             ✅ Dark/Light Mode
-            ✅ Pre-configured (no setup needed)
+            ✅ 100+ Languages
             
             ### Build APK Locally
-            ```powershell
-            cd c:\Users\PC\OneDrive\Desktop\NexusAI
+            See `APK-BUILD-GUIDE.md` for complete instructions:
+            ```bash
             npm install
-            cordova build android --debug
+            cordova platform add android
+            cordova build android --release
+            ```
+            
+            ### API Configuration
+            Get free Groq API key: https://console.groq.com
+            
+            ### Files Included
+            - `app.html` - Web version (no build needed)
+            - `APK-BUILD-GUIDE.md` - Complete build instructions
+            - `DEPLOYMENT-READY.md` - Deployment guide
+            - `www/logo.svg` - NexusAI logo
             ```
             
             APK will be at: `platforms/android/app/build/outputs/apk/debug/app-debug.apk`

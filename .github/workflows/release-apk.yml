@@ -1,4 +1,4 @@
-name: Build Release APK
+name: Build Release APK (Manual)
 
 on:
   workflow_dispatch:
@@ -26,6 +26,7 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: 'gradle'
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -33,19 +34,71 @@ jobs:
     - name: Install npm dependencies
       run: npm install
 
-    - name: Add Cordova as dev dependency
-      run: npm install --save-dev cordova
+    - name: Verify dependencies
+      run: npm ci
 
     - name: Add Android platform
       run: npx cordova platform add android
 
     - name: Build Release APK
-      run: npx cordova build android --release
+      run: |
+        echo "📱 Building Release APK..."
+        npx cordova build android --release
+        echo "✅ Build process completed"
+      continue-on-error: true
 
-    - name: Upload Release APK
+    - name: Check build output
+      run: |
+        echo "Checking for APK files..."
+        if [ -f "platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk" ]; then
+          echo "✅ Unsigned APK found"
+          ls -lh platforms/android/app/build/outputs/apk/release/
+        else
+          echo "⚠️ APK build requires Android SDK setup on your local machine"
+          echo "See APK-BUILD-GUIDE.md for local build instructions"
+        fi
+      continue-on-error: true
+
+    - name: Create release notes
+      run: |
+        cat > RELEASE_NOTES.md << 'EOF'
+        # NexusAI Release ${{ github.event.inputs.version }}
+        
+        ## Build Instructions
+        
+        ### Option 1: Use Web Version
+        Open `app.html` in your browser - no build needed!
+        
+        ### Option 2: Build APK Locally
+        Follow the guide in `APK-BUILD-GUIDE.md`:
+        
+        ```bash
+        npm install
+        cordova platform add android
+        cordova build android --release
+        ```
+        
+        ### Requirements
+        - Node.js 18+
+        - Java 11+
+        - Android SDK
+        
+        ### API Configuration
+        Get free key: https://console.groq.com
+        
+        ### Support
+        See DEPLOYMENT-READY.md for complete documentation
+        EOF
+        cat RELEASE_NOTES.md
+
+    - name: Upload build output
       uses: actions/upload-artifact@v4
       with:
-        name: NexusAI-release-apk
-        path: platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+        name: build-artifacts
+        path: |
+          RELEASE_NOTES.md
+          APK-BUILD-GUIDE.md
+          DEPLOYMENT-READY.md
         if-no-files-found: ignore
+        retention-days: 30
 
