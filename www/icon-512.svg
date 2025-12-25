@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%)">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" fill="url(#grad1)" rx="120"/>
+  
+  <!-- Outer circle -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="white" stroke-width="12" opacity="0.8"/>
+  
+  <!-- Inner circle -->
+  <circle cx="256" cy="256" r="120" fill="white" opacity="0.1"/>
+  
+  <!-- Brain/AI symbol -->
+  <g transform="translate(256, 256)">
+    <!-- Main brain nodes -->
+    <circle cx="-60" cy="-40" r="20" fill="white"/>
+    <circle cx="0" cy="-70" r="20" fill="white"/>
+    <circle cx="60" cy="-40" r="20" fill="white"/>
+    
+    <circle cx="-80" cy="20" r="18" fill="white"/>
+    <circle cx="0" cy="60" r="18" fill="white"/>
+    <circle cx="80" cy="20" r="18" fill="white"/>
+    
+    <!-- Connecting lines -->
+    <line x1="-60" y1="-40" x2="0" y2="-70" stroke="white" stroke-width="3" opacity="0.8"/>
+    <line x1="0" y1="-70" x2="60" y2="-40" stroke="white" stroke-width="3" opacity="0.8"/>
+    
+    <line x1="-60" y1="-40" x2="-80" y2="20" stroke="white" stroke-width="3" opacity="0.8"/>
+    <line x1="0" y1="-70" x2="0" y2="60" stroke="white" stroke-width="3" opacity="0.8"/>
+    <line x1="60" y1="-40" x2="80" y2="20" stroke="white" stroke-width="3" opacity="0.8"/>
+    
+    <line x1="-80" y1="20" x2="0" y2="60" stroke="white" stroke-width="3" opacity="0.8"/>
+    <line x1="0" y1="60" x2="80" y2="20" stroke="white" stroke-width="3" opacity="0.8"/>
+  </g>
+  
+  <!-- Text NexusAI -->
+  <text x="256" y="420" font-size="48" font-weight="bold" fill="white" text-anchor="middle" font-family="Arial, sans-serif">NexusAI</text>
+</svg>

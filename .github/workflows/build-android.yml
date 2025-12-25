@@ -37,6 +37,12 @@ jobs:
           else
             echo "⚠️ API token not found - web version may need manual setup"
           fi
+          
+          if grep -q "gpt-3.5-turbo" www/index.html; then
+            echo "✅ GPT-3.5-Turbo model configured"
+          else
+            echo "⚠️ Model configuration might need update"
+          fi
 
       - name: Create release
         uses: softprops/action-gh-release@v1

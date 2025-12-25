@@ -419,7 +419,7 @@
             // OpenRouter API Configuration - Professional LLM Service
             api: 'https://openrouter.ai/api/v1/chat/completions',
             apiKey: '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',
-            model: 'meta-llama/llama-2-70b-chat', // High quality Llama 2 70B
+            model: 'openai/gpt-3.5-turbo', // Stable & reliable model
             pixabayKey: localStorage.getItem('pixabay_api_key') || 'PIXABAY_KEY_NOT_SET',
             tavilyKey: localStorage.getItem('tavily_api_key') || 'TAVILY_KEY_NOT_SET'
         };
@@ -537,7 +537,7 @@
             // Test API connection
             testApiConnection();
             
-            console.log('✅ OpenRouter API initialized. Ready for all users.');
+            console.log('✅ OpenRouter API initialized with GPT-3.5-Turbo model.');
         }
         
         // Test API connection
@@ -792,8 +792,8 @@ Check browser console (F12) for detailed logs.
                 const requestBody = {
                     messages: messages,
                     model: CONFIG.model,
-                    tools: tools,
-                    tool_choice: "auto"
+                    max_tokens: 1000,
+                    temperature: 0.7
                 };
 
                 console.log('🔄 Sending request to OpenRouter API...', { api: CONFIG.api, model: CONFIG.model });
