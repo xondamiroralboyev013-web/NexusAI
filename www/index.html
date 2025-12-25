@@ -416,13 +416,12 @@
 
     <script>
         const CONFIG = {
-            // Groq API Configuration (Free Tier - Very Fast!)
-            // Token encoded to bypass secret scanning
-            api: 'https://api.groq.com/openai/v1/chat/completions',
-            apiKey: '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', // Valid Groq API key
-            model: 'llama-3.1-8b-instant', // Ultra-fast, free tier, Llama 3.1
+            // OpenRouter API Configuration - Professional LLM Service
+            api: 'https://openrouter.ai/api/v1/chat/completions',
+            apiKey: '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',
+            model: 'meta-llama/llama-2-70b-chat', // High quality Llama 2 70B
             pixabayKey: localStorage.getItem('pixabay_api_key') || 'PIXABAY_KEY_NOT_SET',
-            tavilyKey: localStorage.getItem('tavily_api_key') || 'TAVILY_KEY_NOT_SET' // For web search (get key from tavily.com)
+            tavilyKey: localStorage.getItem('tavily_api_key') || 'TAVILY_KEY_NOT_SET'
         };
 
         const ALL_LANGUAGES = [
@@ -527,7 +526,7 @@
         // API Key Management Functions
         // Note: Groq token is now hardcoded for all users - no need for manual entry
 
-        // Load keys from localStorage on startup (Groq key is hardcoded)
+        // Load keys from localStorage on startup
         function loadApiKeys() {
             const tavilyKey = localStorage.getItem('tavily_api_key');
             const pixabayKey = localStorage.getItem('pixabay_api_key');
@@ -538,31 +537,33 @@
             // Test API connection
             testApiConnection();
             
-            console.log('✅ API initialized. Groq API is ready for all users.');
+            console.log('✅ OpenRouter API initialized. Ready for all users.');
         }
         
         // Test API connection
         async function testApiConnection() {
             try {
-                console.log('🔍 Testing Groq API connection...');
-                console.log('API Key:', CONFIG.apiKey.substring(0, 10) + '...');
+                console.log('🔍 Testing OpenRouter API connection...');
+                console.log('API Key:', CONFIG.apiKey.substring(0, 15) + '...');
                 
                 const testResponse = await fetch(CONFIG.api, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json', 
-                        'Authorization': `Bearer ${CONFIG.apiKey}`
+                        'Authorization': `Bearer ${CONFIG.apiKey}`,
+                        'HTTP-Referer': 'https://nexusai.app',
+                        'X-Title': 'NexusAI Test'
                     },
                     body: JSON.stringify({
-                        messages: [{ role: "user", content: "ping" }],
+                        messages: [{ role: "user", content: "Salom!" }],
                         model: CONFIG.model,
-                        max_tokens: 10
+                        max_tokens: 20
                     })
                 });
                 
                 if (testResponse.ok) {
                     const data = await testResponse.json();
-                    appendMessage('assistant', '✅ API Connection Successful!\n\nGroq API is responding correctly.', null);
+                    appendMessage('assistant', '✅ OpenRouter API Connected!\n\nAPI is responding correctly. Ready to chat!', null);
                     console.log('✅ API connection successful!');
                 } else {
                     const error = await testResponse.text();
@@ -584,7 +585,7 @@
 📦 Model: ${CONFIG.model}
 🔑 API Key Status: ${CONFIG.apiKey ? '✅ Set' : '❌ Missing'}
 🔑 Key Length: ${CONFIG.apiKey.length} characters
-🔑 Key Preview: ${CONFIG.apiKey.substring(0, 10)}...
+🔑 Key Preview: ${CONFIG.apiKey.substring(0, 15)}...
 
 📡 Browser Info:
 - User Agent: ${navigator.userAgent.substring(0, 50)}...
@@ -600,6 +601,12 @@
 - Current Chat ID: ${state.currentChatId || 'None'}
 - Language: ${state.lang}
 - Mode: ${state.mode}
+
+✨ Features:
+- Image Upload: ✅ Enabled
+- Speech Recognition: ${recognition ? '✅ Available' : '❌ Not Available'}
+- Voice Output: ✅ Available
+- Dark Mode: ✅ Available
 
 Check browser console (F12) for detailed logs.
             `;
@@ -789,14 +796,16 @@ Check browser console (F12) for detailed logs.
                     tool_choice: "auto"
                 };
 
-                console.log('🔄 Sending request to Groq API...', { api: CONFIG.api, model: CONFIG.model });
+                console.log('🔄 Sending request to OpenRouter API...', { api: CONFIG.api, model: CONFIG.model });
                 console.log('📨 Message count:', messages.length);
                 
                 const response = await fetch(CONFIG.api, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json', 
-                        'Authorization': `Bearer ${CONFIG.apiKey}`
+                        'Authorization': `Bearer ${CONFIG.apiKey}`,
+                        'HTTP-Referer': 'https://nexusai.app',
+                        'X-Title': 'NexusAI Sovereign'
                     },
                     body: JSON.stringify(requestBody)
                 });
@@ -1240,9 +1249,7 @@ Check browser console (F12) for detailed logs.
         function setupImageUpload() {
             const uploadInput = document.getElementById('imageUpload');
             uploadInput.addEventListener('click', async (e) => {
-                // Request camera/gallery permission before opening file dialog
                 try {
-                    // Request camera permission (this will also enable gallery access on mobile)
                     const permission = await navigator.permissions.query({ name: 'camera' });
                     if (permission.state === 'denied') {
                         alert('📷 Camera permission is blocked. Please enable it in settings.');
@@ -1257,7 +1264,6 @@ Check browser console (F12) for detailed logs.
                 const file = e.target.files[0];
                 if (!file) return;
                 
-                // Check file size (max 5MB)
                 if (file.size > 5 * 1024 * 1024) {
                     alert('❌ File too large. Max 5MB allowed.');
                     return;
@@ -1267,9 +1273,15 @@ Check browser console (F12) for detailed logs.
                 reader.onload = (event) => {
                     const img = event.target.result;
                     const inputEl = document.getElementById('mainInput');
-                    inputEl.value += `\n[📷 Rasm: ${file.name}]`;
+                    
+                    // Rasm oxirgi message'ga qo'shish
+                    const fileName = file.name;
+                    inputEl.value += `\n[📷 Rasm: ${fileName}]`;
                     toggleSendButton();
-                    console.log('✅ Image uploaded:', file.name);
+                    
+                    // Rasm preview ko'rsatish
+                    console.log('✅ Image uploaded:', fileName);
+                    appendMessage('assistant', `📷 Rasm yuklandi: ${fileName}\n\nRasm haqida savol yoki tavsif bering.`, null);
                 };
                 reader.onerror = () => {
                     alert('❌ Error reading file');

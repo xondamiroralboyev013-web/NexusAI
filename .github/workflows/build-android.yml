@@ -32,8 +32,8 @@ jobs:
 
       - name: Verify API token in app
         run: |
-          if grep -q "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" www/index.html; then
-            echo "✅ API token found in index.html"
+          if grep -q "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" www/index.html; then
+            echo "✅ OpenRouter API token found in index.html"
           else
             echo "⚠️ API token not found - web version may need manual setup"
           fi
