@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NexusAI Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="512" height="512"></canvas>
+    <br>
+    <button onclick="downloadIcon()">Download Icon PNG</button>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function drawNexusIcon() {
+            // Clear background
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Draw gradient background for icon
+            const gradient = ctx.createRadialGradient(256, 256, 0, 256, 256, 400);
+            gradient.addColorStop(0, '#FFFFFF');
+            gradient.addColorStop(1, '#E8F5E9');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Center point
+            const centerX = 256;
+            const centerY = 256;
+            const size = 180;
+            
+            // Draw green diamond shape (8 vertices)
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            
+            // Green gradient
+            const diamondGrad = ctx.createLinearGradient(-size, -size, size, size);
+            diamondGrad.addColorStop(0, '#4ADE80');
+            diamondGrad.addColorStop(0.5, '#22C55E');
+            diamondGrad.addColorStop(1, '#16A34A');
+            
+            // Draw octagon-like diamond shape
+            ctx.fillStyle = diamondGrad;
+            ctx.strokeStyle = '#15803D';
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            for (let i = 0; i < 8; i++) {
+                const angle = (i * Math.PI / 4) - Math.PI / 8;
+                const x = Math.cos(angle) * size;
+                const y = Math.sin(angle) * size;
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Inner white center diamond
+            ctx.fillStyle = '#FFFFFF';
+            const innerSize = size * 0.5;
+            ctx.beginPath();
+            for (let i = 0; i < 4; i++) {
+                const angle = (i * Math.PI / 2);
+                const x = Math.cos(angle) * innerSize;
+                const y = Math.sin(angle) * innerSize;
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+            
+            // Add text
+            ctx.fillStyle = '#1F2937';
+            ctx.font = 'bold 48px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('NexusAI', 256, 380);
+        }
+        
+        // Draw the icon
+        drawNexusIcon();
+        
+        // Download function
+        function downloadIcon() {
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ic_launcher.png';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+    </script>
+    
+    <p>Open this file in a browser, then click "Download Icon PNG" to save the icon!</p>
+</body>
+</html>

@@ -416,10 +416,10 @@
 
     <script>
         const CONFIG = {
-            // xAI Grok API Configuration
-            api: 'https://api.x.ai/v1/chat/completions',
-            apiKey: localStorage.getItem('xai_api_key') || 'xai-YOUR_API_KEY_HERE',
-            model: 'grok-beta', // xAI Grok model
+            // Groq API Configuration (Latest)
+            api: 'https://api.groq.com/openai/v1/chat/completions',
+            apiKey: localStorage.getItem('groq_api_key') || (typeof process !== 'undefined' && process.env.GROQ_API_KEY) || 'GROQ_API_KEY_NOT_SET',
+            model: 'mixtral-8x7b-32768', // Groq fast model
             appName: 'NexusAI/1.0.0', // App identifier
             pixabayKey: localStorage.getItem('pixabay_api_key') || 'PIXABAY_KEY_NOT_SET',
             tavilyKey: localStorage.getItem('tavily_api_key') || 'TAVILY_KEY_NOT_SET'
@@ -531,11 +531,13 @@
         function loadApiKeys() {
             const tavilyKey = localStorage.getItem('tavily_api_key');
             const pixabayKey = localStorage.getItem('pixabay_api_key');
+            const groqKey = localStorage.getItem('groq_api_key');
             
             if (tavilyKey) CONFIG.tavilyKey = tavilyKey;
             if (pixabayKey) CONFIG.pixabayKey = pixabayKey;
+            if (groqKey) CONFIG.apiKey = groqKey;
             
-            console.log('✅ OpenRouter API initialized.');
+            console.log('✅ Groq API initialized.');
             console.log('🔑 API Endpoint:', CONFIG.api);
             console.log('📦 Model:', CONFIG.model);
             console.log('🔑 Key:', CONFIG.apiKey.substring(0, 10) + '...');
@@ -550,7 +552,7 @@
         // Test API connection
         async function testApiConnection() {
             try {
-                console.log('🔍 Testing OpenRouter API connection...');
+                console.log('🔍 Testing Groq API connection...');
                 console.log('API Key:', CONFIG.apiKey.substring(0, 15) + '...');
                 console.log('Model:', CONFIG.model);
                 
@@ -579,12 +581,14 @@
                 if (testResponse.ok) {
                     const data = await testResponse.json();
                     console.log('Response data:', data);
-                    appendMessage('assistant', '✅ OpenRouter API Connected!\n\n' + data.choices[0].message.content, null);
-                    console.log('✅ API connection successful!');
+                    const responseText = data.choices?.[0]?.message?.content || 'No response';
+                    appendMessage('assistant', '✅ Groq API Connected!\\n\\n' + responseText, null);
+                    console.log('✅ Groq API connection successful!');
                 } else {
                     const error = await testResponse.text();
                     console.error('Full error response:', error);
-                    appendMessage('error', `❌ API connection failed: ${testResponse.status}\n${error}`);
+                    const errorMsg = error ? error.substring(0, 200) : 'Unknown error';
+                    appendMessage('error', `❌ API connection failed: ${testResponse.status}\\n${errorMsg}`);
                 }
             } catch (e) {
                 appendMessage('error', `❌ API test error: ${e.message}`);
@@ -815,7 +819,7 @@ Check browser console (F12) for detailed logs.
                     presence_penalty: 0
                 };
 
-                console.log('🔄 Sending request to OpenRouter API...');
+                console.log('🔄 Sending request to Groq API...');
                 console.log('📨 API:', CONFIG.api);
                 console.log('📦 Model:', CONFIG.model);
                 console.log('💬 Messages:', messages.length);
@@ -923,7 +927,7 @@ Check browser console (F12) for detailed logs.
                 const tavilyKey = CONFIG.tavilyKey;
                 
                 // If key not set, return empty results (graceful fallback)
-                if (tavilyKey === 'REPLACE_TAVILY_KEY') {
+                if (tavilyKey === 'TAVILY_KEY_NOT_SET' || !tavilyKey) {
                     console.warn('Tavily API key not configured for web search');
                     return [];
                 }

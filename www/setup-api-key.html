@@ -1,5 +1,5 @@
 <!-- 
-Quick API Key Setup Helper
+Quick Groq API Key Setup Helper
 Open this file or use the code below in browser console to instantly configure your API key
 
 Usage:
@@ -7,7 +7,7 @@ Usage:
 2. Press F12 to open Developer Console
 3. Copy & paste the command below and press Enter:
 
-localStorage.setItem('xai_api_key', 'YOUR_KEY_HERE');
+localStorage.setItem('groq_api_key', 'YOUR_KEY_HERE');
 location.reload();
 
 Then refresh the app - it will be ready to use!
@@ -75,13 +75,13 @@ Then refresh the app - it will be ready to use!
 </head>
 <body>
     <div class="card">
-        <h1>🔑 NexusAI - API Key Setup</h1>
+        <h1>🔑 NexusAI - Groq API Key Setup</h1>
         
         <h2>Quick Setup (30 seconds)</h2>
         
-        <p>Paste your xAI API key below and click "Set Key":</p>
+        <p>Paste your Groq API key below and click "Set Key":</p>
         
-        <input type="password" id="apiKeyInput" placeholder="xai-YOUR_API_KEY_HERE" />
+        <input type="password" id="apiKeyInput" placeholder="gsk_YOUR_API_KEY_HERE" />
         
         <button onclick="setApiKey()">✅ Set API Key</button>
         
@@ -92,12 +92,12 @@ Then refresh the app - it will be ready to use!
         <hr style="margin: 24px 0; border: none; border-top: 1px solid #ddd;" />
 
         <h2>Don't have a key?</h2>
-        <p>Get one for free at: <a href="https://console.x.ai" target="_blank">https://console.x.ai</a></p>
+        <p>Get one for free at: <a href="https://console.groq.com" target="_blank">https://console.groq.com</a></p>
 
         <h2>How it works:</h2>
         <ol>
-            <li>Sign up at console.x.ai</li>
-            <li>Copy your xAI API key</li>
+            <li>Sign up at console.groq.com</li>
+            <li>Copy your Groq API key</li>
             <li>Paste it above and click "Set API Key"</li>
             <li>You'll be redirected to NexusAI - ready to chat! 🚀</li>
         </ol>
@@ -107,7 +107,7 @@ Then refresh the app - it will be ready to use!
         <h2>Manual Setup (via Console)</h2>
         <p>Alternatively, open NexusAI, press F12, and run this in the console:</p>
         <code style="display: block; padding: 12px; background: #1e1e1e; color: #00ff00; border-radius: 8px; overflow-x: auto; font-size: 12px;">
-localStorage.setItem('xai_api_key', 'YOUR_KEY_HERE');<br/>
+localStorage.setItem('groq_api_key', 'YOUR_KEY_HERE');<br/>
 location.reload();
         </code>
     </div>
@@ -121,13 +121,13 @@ location.reload();
                 return;
             }
             
-            if (!key.startsWith('xai-')) {
-                alert('Key should start with "xai-"');
+            if (!key.startsWith('gsk_')) {
+                alert('Key should start with "gsk_"');
                 return;
             }
             
             // Save to localStorage
-            localStorage.setItem('xai_api_key', key);
+            localStorage.setItem('groq_api_key', key);
             
             // Show success message
             document.getElementById('successMsg').style.display = 'block';
