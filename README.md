@@ -1,53 +1,77 @@
-# 🚀 NexusAI - Hybrid AI Chat Application
+# 🚀 NexusAI - Advanced AI Chat Application
 
-[![GitHub](https://img.shields.io/badge/GitHub-xondamiroralboyev013--web/NexusAI-blue)](https://github.com/xondamiroralboyev013-web/NexusAI)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.0-brightgreen)](https://github.com/xondamiroralboyev013-web/NexusAI/releases/tag/v1.0.0)
 [![License](https://img.shields.io/badge/License-MIT-green)](#license)
-[![Status](https://img.shields.io/badge/Status-Active-brightgreen)](#)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)](#)
+[![Groq API](https://img.shields.io/badge/Powered%20by-Groq%20Mixtral-blue)](#)
 
-> **Nexus Hybrid AI**: Combines **ChatGPT's creative intelligence** with **Perplexity's research accuracy**
+> **NexusAI v1.0.0** - Ultra-fast AI chat with web search, images, and 100+ languages
 
----
-
-## ✨ What is Nexus?
-
-Nexus is an intelligent AI chat application that automatically adapts to your needs:
-
-- 🔍 **Research Mode** (Web Search) - Get facts with sources
-- 💡 **Creator Mode** (Deep Reasoning) - Code, writing, analysis
-- 📸 **Visual Mode** (Images + Maps) - See visual references
-
-### Key Features
-
-| Feature | Description |
-|---------|-------------|
-| 🌐 **Web Search** | Real-time web search via Tavily API |
-| 📖 **Source Citations** | Clickable links with snippets |
-| 💻 **Code Blocks** | Syntax-highlighted code output |
-| 🖼️ **Images** | Pixabay integration for visuals |
-| 📍 **Maps** | Google Maps for locations |
-| 📱 **Mobile APK** | Works as Android app via Cordova |
-| 🔄 **Auto-Mode Detection** | Intelligent mode switching |
-| 🌍 **40+ Languages** | Support for major world languages |
-| 🎨 **Dark/Light Theme** | Tailwind CSS responsive design |
-| 💾 **Chat History** | Persistent conversation storage |
+**[📥 DOWNLOAD NOW](https://github.com/xondamiroralboyev013-web/NexusAI/releases/tag/v1.0.0)** | **[🚀 Quick Start](#quick-start)** | **[📖 Guide](DOWNLOAD-AND-INSTALL.md)**
 
 ---
 
-## 🎯 Three Intelligent Modes
+## ✨ Features
 
-### 🔍 Research Mode (Perplexity-style)
-Ask factual questions and get verified answers with sources.
+| Feature | Status |
+|---------|--------|
+| 🤖 **Groq AI** (Mixtral 8x7B) | ✅ Ultra-fast responses |
+| 🔍 **Web Search** (Tavily) | ✅ Real-time research |
+| 🖼️ **Image Search** (Pixabay) | ✅ Visual results |
+| 🎤 **Voice I/O** | ✅ Speak & listen |
+| 🌍 **100+ Languages** | ✅ Global support |
+| 📱 **Android APK** | ✅ Mobile app |
+| 🌐 **Web Version** | ✅ Browser ready |
+| 💾 **Chat History** | ✅ Save conversations |
+| 🎨 **Dark Mode** | ✅ Eye comfort |
+| 🚀 **PWA Ready** | ✅ Install as app |
 
+---
+
+## 🎯 Quick Start
+
+### **Option 1: Web Version (No Build Needed) ⭐**
+```bash
+1. Download: https://github.com/xondamiroralboyev013-web/NexusAI/releases
+2. Extract the ZIP
+3. Open: www/app.html in your browser
+4. Get free API key: https://console.groq.com
+5. Add key in Settings & Start chatting!
 ```
-User: "What's the latest breakthrough in quantum computing?"
 
-↓ NexusAI detects factual query
-
-Nexus:
-[Shows 5 source cards with clickable links]
-[Displays snippets from each source]
-[Provides answer citing research]
+### **Option 2: Clone & Run**
+```bash
+git clone https://github.com/xondamiroralboyev013-web/NexusAI.git
+cd NexusAI
+npm install
+npm run serve
 ```
+
+### **Option 3: Build Android APK**
+```bash
+npm install
+cordova platform add android
+cordova build android --release
+# APK at: platforms/android/app/build/outputs/apk/release/
+```
+
+---
+
+## 📥 Download Options
+
+### **🔗 Main Repository**
+- **Web:** https://github.com/xondamiroralboyev013-web/NexusAI
+- **Release:** https://github.com/xondamiroralboyev013-web/NexusAI/releases/tag/v1.0.0
+- **ZIP:** https://github.com/xondamiroralboyev013-web/NexusAI/archive/refs/heads/main.zip
+
+### **📦 What You Get**
+✅ Full source code  
+✅ Android build files  
+✅ Complete documentation  
+✅ Logo & assets  
+✅ API configuration  
+
+**See [DOWNLOAD-AND-INSTALL.md](DOWNLOAD-AND-INSTALL.md) for detailed instructions**
 
 **Perfect for:**
 - Current events & news
