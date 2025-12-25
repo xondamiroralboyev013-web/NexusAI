@@ -311,11 +311,11 @@
                 <div class="space-y-2 border-t border-border pt-4">
                     <h4 class="text-xs font-bold text-textMuted uppercase tracking-wider">Real-Time Data</h4>
                     
-                    <button onclick="(async () => { const price = await fetchCryptoPrice('bitcoin'); if(price) appendMessage('assistant', `Bitcoin: $${price.toFixed(2)}`, null); })();" class="w-full p-3 rounded-lg bg-surface border border-border text-sm font-medium active:bg-surfaceHover text-center">₿ Bitcoin Price</button>
+                    <button onclick="(async () => { const price = await fetchCryptoPrice('bitcoin'); })();" class="w-full p-3 rounded-lg bg-surface border border-border text-sm font-medium active:bg-surfaceHover text-center">₿ Bitcoin Price</button>
                     
-                    <button onclick="(async () => { const weather = await fetchWeather('London'); if(weather) appendMessage('assistant', `Weather in London: ${weather.condition}, ${weather.temp}`, null); })();" class="w-full p-3 rounded-lg bg-surface border border-border text-sm font-medium active:bg-surfaceHover text-center">🌤️ London Weather</button>
+                    <button onclick="(async () => { await fetchWeather('London'); })();" class="w-full p-3 rounded-lg bg-surface border border-border text-sm font-medium active:bg-surfaceHover text-center">🌤️ London Weather</button>
                     
-                    <button onclick="(async () => { const rate = await fetchCurrencyRate('USD', 'EUR'); if(rate) appendMessage('assistant', `1 USD = ${rate.toFixed(4)} EUR`, null); })();" class="w-full p-3 rounded-lg bg-surface border border-border text-sm font-medium active:bg-surfaceHover text-center">💱 USD/EUR Rate</button>
+                    <button onclick="(async () => { await fetchCurrencyRate('USD', 'EUR'); })();" class="w-full p-3 rounded-lg bg-surface border border-border text-sm font-medium active:bg-surfaceHover text-center">💱 USD/EUR Rate</button>
                 </div>
 
 
@@ -411,10 +411,10 @@
             // Groq API Configuration (Free Tier - Very Fast!)
             // Token encoded to bypass secret scanning
             api: 'https://api.groq.com/openai/v1/chat/completions',
-            apiKey: atob('Z3NrX2NFZVRNU0xFNWdPWWszZGpBZExTV0dkeWIzRllTSkhnWGI1Nk9iUXNYZENJbloZGYx1wa=='), // Decoded: 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
+            apiKey: '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', // Valid Groq API key
             model: 'llama-3.1-8b-instant', // Ultra-fast, free tier, Llama 3.1
-            pixabayKey: localStorage.getItem('pixabay_api_key') || 'REPLACE_PIXABAY_KEY',
-            tavilyKey: localStorage.getItem('tavily_api_key') || 'REPLACE_TAVILY_KEY' // For web search (get key from tavily.com)
+            pixabayKey: localStorage.getItem('pixabay_api_key') || 'PIXABAY_KEY_NOT_SET',
+            tavilyKey: localStorage.getItem('tavily_api_key') || 'TAVILY_KEY_NOT_SET' // For web search (get key from tavily.com)
         };
 
         const ALL_LANGUAGES = [
@@ -1183,20 +1183,7 @@
         }
 
         
-        // Share API
-        async function shareChat() {
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'NexusAI Chat',
-                        text: 'NexusAI bilan chat qiling!',
-                        url: window.location.href
-                    });
-                } catch (err) {
-                    console.log('Share failed:', err);
-                }
-            }
-        }
+        // Removed duplicate shareChat - it's defined at line ~1350
         
         // Vibration API
         function vibrate(pattern = [200]) {
