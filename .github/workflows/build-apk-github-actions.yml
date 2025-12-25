@@ -1,0 +1,78 @@
+name: Build APK from GitHub
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-levels: 31
+          build-tools: 31.0.0
+          ndk-version: 24.0.8215888
+      
+      - name: Install dependencies
+        run: |
+          npm install -g cordova
+          npm install
+      
+      - name: Add Android platform
+        run: cordova platform add android
+      
+      - name: Build APK
+        run: cordova build android --release
+        
+      - name: Find APK
+        id: find-apk
+        run: |
+          APK_PATH=$(find . -name "*.apk" -type f | grep -i release | head -1)
+          if [ -z "$APK_PATH" ]; then
+            APK_PATH=$(find . -name "*.apk" -type f | head -1)
+          fi
+          echo "APK found at: $APK_PATH"
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          ls -lh "$APK_PATH"
+      
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ steps.find-apk.outputs.apk_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: NexusAI-APK
+          path: ${{ steps.find-apk.outputs.apk_path }}
+          retention-days: 30
+      
+      - name: Create Release Note
+        run: |
+          echo "✅ APK Tayyor!" > release.txt
+          echo "📱 NexusAI APK Version 1.0.0" >> release.txt
+          echo "🔗 GitHub Actions orqali yaratilgan" >> release.txt
+          echo "" >> release.txt
+          echo "APK Fayllar:" >> release.txt
+          find . -name "*.apk" -type f -exec ls -lh {} \;
