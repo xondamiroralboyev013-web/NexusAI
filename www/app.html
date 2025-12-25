@@ -846,12 +846,12 @@ const nexusai = {
         setupTheme: 'light',
         setupPlan: 'free',
         config: {
-            api: 'https://api.groq.com/openai/v1/chat/completions',
-            // IMPORTANT: Do NOT commit your Groq API key publicly.
+            api: 'https://api.x.ai/v1/chat/completions',
+            // IMPORTANT: Do NOT commit your xAI API key publicly.
             // The app reads the key from localStorage at runtime (set in Settings).
-            // For CI builds, set the secret `GROQ_API_KEY` and the workflow will inject it during build.
-            apiKey: localStorage.getItem('groq_api_key') || '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',
-            model: 'llama-3.1-8b-instant',
+            // For CI builds, set the secret `XAI_API_KEY` and the workflow will inject it during build.
+            apiKey: localStorage.getItem('xai_api_key') || 'xai-YOUR_API_KEY_HERE',
+            model: 'grok-beta',
         },
         appMode: 'chat',
         voiceOutput: false,
