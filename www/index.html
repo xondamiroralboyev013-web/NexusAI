@@ -304,6 +304,14 @@
                             <i data-lucide="share-2" class="w-4 h-4"></i>
                             <span>Share</span>
                         </button>
+                        <button onclick="testApiConnection()" class="p-3 rounded-lg bg-surface border border-border text-xs font-medium flex flex-col items-center gap-1 active:bg-surfaceHover">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
+                            <span>Test API</span>
+                        </button>
+                        <button onclick="showApiDiagnostics()" class="p-3 rounded-lg bg-surface border border-border text-xs font-medium flex flex-col items-center gap-1 active:bg-surfaceHover">
+                            <i data-lucide="bug" class="w-4 h-4"></i>
+                            <span>Debug</span>
+                        </button>
                     </div>
                 </div>
 
@@ -527,7 +535,76 @@
             if (tavilyKey) CONFIG.tavilyKey = tavilyKey;
             if (pixabayKey) CONFIG.pixabayKey = pixabayKey;
             
+            // Test API connection
+            testApiConnection();
+            
             console.log('✅ API initialized. Groq API is ready for all users.');
+        }
+        
+        // Test API connection
+        async function testApiConnection() {
+            try {
+                console.log('🔍 Testing Groq API connection...');
+                console.log('API Key:', CONFIG.apiKey.substring(0, 10) + '...');
+                
+                const testResponse = await fetch(CONFIG.api, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${CONFIG.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        messages: [{ role: "user", content: "ping" }],
+                        model: CONFIG.model,
+                        max_tokens: 10
+                    })
+                });
+                
+                if (testResponse.ok) {
+                    const data = await testResponse.json();
+                    appendMessage('assistant', '✅ API Connection Successful!\n\nGroq API is responding correctly.', null);
+                    console.log('✅ API connection successful!');
+                } else {
+                    const error = await testResponse.text();
+                    appendMessage('error', `❌ API connection failed: ${testResponse.status}\n${error}`);
+                    console.error('❌ API connection failed:', testResponse.status, error);
+                }
+            } catch (e) {
+                appendMessage('error', `❌ API test error: ${e.message}`);
+                console.error('❌ API test error:', e.message);
+            }
+        }
+        
+        // Show API diagnostics
+        function showApiDiagnostics() {
+            const diagnostics = `
+📋 API DIAGNOSTICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔗 API Endpoint: ${CONFIG.api}
+📦 Model: ${CONFIG.model}
+🔑 API Key Status: ${CONFIG.apiKey ? '✅ Set' : '❌ Missing'}
+🔑 Key Length: ${CONFIG.apiKey.length} characters
+🔑 Key Preview: ${CONFIG.apiKey.substring(0, 10)}...
+
+📡 Browser Info:
+- User Agent: ${navigator.userAgent.substring(0, 50)}...
+- Online: ${navigator.onLine ? '✅ Yes' : '❌ No'}
+- Language: ${navigator.language}
+
+📊 Cache Status:
+- Tavily Key: ${CONFIG.tavilyKey !== 'TAVILY_KEY_NOT_SET' ? '✅ Set' : '❌ Not Set'}
+- Pixabay Key: ${CONFIG.pixabayKey !== 'PIXABAY_KEY_NOT_SET' ? '✅ Set' : '❌ Not Set'}
+
+💾 Chat Data:
+- Total Chats: ${state.chats.length}
+- Current Chat ID: ${state.currentChatId || 'None'}
+- Language: ${state.lang}
+- Mode: ${state.mode}
+
+Check browser console (F12) for detailed logs.
+            `;
+            
+            appendMessage('assistant', diagnostics.trim(), null);
         }
 
         function setMode(mode) {
@@ -712,14 +789,28 @@
                     tool_choice: "auto"
                 };
 
+                console.log('🔄 Sending request to Groq API...', { api: CONFIG.api, model: CONFIG.model });
+                console.log('📨 Message count:', messages.length);
+                
                 const response = await fetch(CONFIG.api, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.apiKey}`, 'HTTP-Referer': window.location.href, 'X-Title': 'NexusAI Sovereign' },
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${CONFIG.apiKey}`
+                    },
                     body: JSON.stringify(requestBody)
                 });
 
-                if(!response.ok) throw new Error(`API Error: ${response.status}`);
+                console.log('✅ API Response Status:', response.status);
+                
+                if(!response.ok) {
+                    const errorData = await response.text();
+                    console.error('❌ API Error:', response.status, errorData);
+                    throw new Error(`API Error ${response.status}: ${errorData}`);
+                }
+                
                 const data = await response.json();
+                console.log('📦 API Response:', data);
                 let aiText = data.choices?.[0]?.message?.content || "Connection interruption.";
                 removeSkeleton(loaderId);
                 
@@ -781,7 +872,12 @@
                 appendMessage('assistant', cleanText.trim(), metadata);
                 saveToHistory('assistant', cleanText.trim(), metadata);
 
-            } catch (err) { removeSkeleton(loaderId); appendMessage('error', "Connection interruption."); }
+            } catch (err) { 
+                removeSkeleton(loaderId);
+                console.error('❌ Error in sendMessage:', err);
+                const errorMsg = err.message || 'Connection interruption';
+                appendMessage('error', `⚠️ ${errorMsg}`);
+            }
         }
 
         async function fetchWebSearch(query) {
