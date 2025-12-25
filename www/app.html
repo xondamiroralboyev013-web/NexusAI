@@ -846,12 +846,12 @@ const nexusai = {
         setupTheme: 'light',
         setupPlan: 'free',
         config: {
-            api: 'https://api.x.ai/v1/chat/completions',
-            // IMPORTANT: Do NOT commit your xAI API key publicly.
+            api: 'https://api.groq.com/openai/v1/chat/completions',
+            // IMPORTANT: Do NOT commit your Groq API key publicly.
             // The app reads the key from localStorage at runtime (set in Settings).
-            // For CI builds, set the secret `XAI_API_KEY` and the workflow will inject it during build.
-            apiKey: localStorage.getItem('xai_api_key') || 'xai-YOUR_API_KEY_HERE',
-            model: 'grok-beta',
+            // For CI builds, set the secret `GROQ_API_KEY` and the workflow will inject it during build.
+            apiKey: localStorage.getItem('groq_api_key') || '',
+            model: 'llama-3.1-8b-instant',
         },
         appMode: 'chat',
         voiceOutput: false,
@@ -1039,13 +1039,38 @@ const nexusai = {
     },
     
     completeSetup() {
-        const name = document.getElementById('setupName').value.trim();
-        const email = document.getElementById('setupEmail').value.trim();
-        const password = document.getElementById('setupPassword').value;
-        const apiKey = document.getElementById('setupApiKey').value.trim();
+        const setupNameEl = document.getElementById('setupName');
+        const setupEmailEl = document.getElementById('setupEmail');
+        const setupPasswordEl = document.getElementById('setupPassword');
+        const setupApiKeyEl = document.getElementById('setupApiKey');
+        
+        if (!setupNameEl || !setupEmailEl || !setupPasswordEl || !setupApiKeyEl) {
+            alert('Setup form is not properly loaded');
+            return;
+        }
+        
+        const name = setupNameEl.value.trim();
+        const email = setupEmailEl.value.trim();
+        const password = setupPasswordEl.value;
+        const apiKey = setupApiKeyEl.value.trim();
         
         if (!name || !email || !password || !apiKey) {
             alert('Please fill in all fields');
+            return;
+        }
+        
+        if (!email.includes('@')) {
+            alert('Please enter a valid email address');
+            return;
+        }
+        
+        if (password.length < 6) {
+            alert('Password must be at least 6 characters long');
+            return;
+        }
+        
+        if (!apiKey.startsWith('gsk_')) {
+            alert('Invalid Groq API key. It should start with "gsk_"');
             return;
         }
         
@@ -1546,35 +1571,62 @@ Please write a clear and persuasive visa application statement.`;
     // Attach listeners
     attachListeners() {
         // Onboarding
-        document.getElementById('startOnboardingBtn').addEventListener('click', () => this.startOnboarding());
-        document.getElementById('skipOnboardingBtn').addEventListener('click', () => this.skipOnboarding());
+        const startBtn = document.getElementById('startOnboardingBtn');
+        const skipBtn = document.getElementById('skipOnboardingBtn');
+        if (startBtn) startBtn.addEventListener('click', () => this.startOnboarding());
+        if (skipBtn) skipBtn.addEventListener('click', () => this.skipOnboarding());
         
         // App
-        document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
-        document.getElementById('proBtn').addEventListener('click', () => this.openProModal());
-        document.getElementById('settingsBtn').addEventListener('click', () => this.openSettings());
-        document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
-        document.getElementById('appWriterBtn').addEventListener('click', () => this.openAppWriter());
+        const themeToggle = document.getElementById('themeToggle');
+        const proBtn = document.getElementById('proBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const appWriterBtn = document.getElementById('appWriterBtn');
+        
+        if (themeToggle) themeToggle.addEventListener('click', () => this.toggleTheme());
+        if (proBtn) proBtn.addEventListener('click', () => this.openProModal());
+        if (settingsBtn) settingsBtn.addEventListener('click', () => this.openSettings());
+        if (logoutBtn) logoutBtn.addEventListener('click', () => this.logout());
+        if (appWriterBtn) appWriterBtn.addEventListener('click', () => this.openAppWriter());
         
         // Application Writer
         document.querySelectorAll('.app-type-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.switchAppType(e.target.dataset.type));
         });
-        document.getElementById('applicationForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.generateApplication();
-        });
-        document.getElementById('closeAppWriter').addEventListener('click', () => this.closeAppWriter());
-        document.getElementById('copyAppBtn').addEventListener('click', () => this.copyToClipboard());
+        const applicationForm = document.getElementById('applicationForm');
+        if (applicationForm) {
+            applicationForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.generateApplication();
+            });
+        }
+        const closeAppWriter = document.getElementById('closeAppWriter');
+        if (closeAppWriter) closeAppWriter.addEventListener('click', () => this.closeAppWriter());
+        const copyAppBtn = document.getElementById('copyAppBtn');
+        if (copyAppBtn) copyAppBtn.addEventListener('click', () => this.copyToClipboard());
         
         // Messages
-        document.getElementById('messageForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const input = document.getElementById('messageInput');
-            this.sendMessage(input.value);
-            input.value = '';
-        });
-    }
+        const messageForm = document.getElementById('messageForm');
+        if (messageForm) {
+            messageForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('messageInput');
+                if (input && input.value.trim()) {
+                    this.sendMessage(input.value);
+                    input.value = '';
+                }
+            });
+        }
+    },
+    
+    copyToClipboard() {
+        const generatedText = document.getElementById('generatedText');
+        if (generatedText && generatedText.innerText) {
+            navigator.clipboard.writeText(generatedText.innerText)
+                .then(() => alert('✅ Copied to clipboard!'))
+                .catch(err => alert('❌ Failed to copy: ' + err.message));
+        }
+    },
 };
 
 // Start when ready - handle both web and APK
